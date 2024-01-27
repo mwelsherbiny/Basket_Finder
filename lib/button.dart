@@ -15,9 +15,18 @@ class Button extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (text == 'Sign In') {
-      return TextButton(
-        onPressed: signIn,
-        child: StyledText(text, 'bold', 16),
+      return Container(
+        margin: EdgeInsets.only(top: 8),
+        width: 281,
+        height: 49,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Color.fromRGBO(55, 235, 115, 1)
+        ),
+        child: TextButton(
+          onPressed: signIn,
+          child: StyledText(text, 'bold', 16),
+        ),
       );
     }
     return TextButton(
