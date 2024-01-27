@@ -17,12 +17,12 @@ class Button extends StatelessWidget {
     if (text == 'Sign In') {
       return TextButton(
         onPressed: signIn,
-        child: StyledText(text),
+        child: StyledText(text, 'bold', 16),
       );
     }
     return TextButton(
       onPressed: signUp,
-      child: StyledText(text),
+      child: StyledText(text, 'bold', 16),
     );
   }
 }
