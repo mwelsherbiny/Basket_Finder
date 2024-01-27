@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_solution_challange/styled_text.dart';
 
 class Button extends StatelessWidget {
   String text;
@@ -16,23 +17,12 @@ class Button extends StatelessWidget {
     if (text == 'Sign In') {
       return TextButton(
         onPressed: signIn,
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Color.fromRGBO(44, 44, 44, 1)),
-        ),
+        child: StyledText(text),
       );
     }
     return TextButton(
-        onPressed: signUp,
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Color.fromRGBO(44, 44, 44, 1)),
-        ));
+      onPressed: signUp,
+      child: StyledText(text),
+    );
   }
 }
