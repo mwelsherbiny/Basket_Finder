@@ -13,25 +13,24 @@ class Button extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: 8),
       width: 281,
       height: 49,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Color.fromRGBO(55, 235, 115, 1)),
+          color: const Color.fromRGBO(55, 235, 115, 1)),
       child: TextButton(
-        onPressed: (text == 'Sign In') ? () {
-            // TODO
-            Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MainPage())
-            );
-        }
-        : () {
-            // TODO
-            Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MainPage())
-            );
-        },
+        onPressed: (text == 'Sign In')
+            ? () {
+                // TODO
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const MainPage()));
+              }
+            : () {
+                // TODO
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const MainPage()));
+              },
         child: StyledText(text, 'bold', 16),
       ),
     );
