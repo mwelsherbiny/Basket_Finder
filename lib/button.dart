@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/styled_text.dart';
+import 'package:google_solution_challange/main_page.dart';
 
 class Button extends StatelessWidget {
   String text;
   Button(this.text, {super.key});
-  void signIn() {
-    // TODO
-  }
 
   void signUp() {
     // TODO
@@ -14,24 +12,28 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (text == 'Sign In') {
-      return Container(
-        margin: EdgeInsets.only(top: 8),
-        width: 281,
-        height: 49,
-        decoration: BoxDecoration(
+    return Container(
+      margin: EdgeInsets.only(top: 8),
+      width: 281,
+      height: 49,
+      decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Color.fromRGBO(55, 235, 115, 1)
-        ),
-        child: TextButton(
-          onPressed: signIn,
-          child: StyledText(text, 'bold', 16),
-        ),
-      );
-    }
-    return TextButton(
-      onPressed: signUp,
-      child: StyledText(text, 'bold', 16),
+          color: Color.fromRGBO(55, 235, 115, 1)),
+      child: TextButton(
+        onPressed: (text == 'Sign In') ? () {
+            // TODO
+            Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MainPage())
+            );
+        }
+        : () {
+            // TODO
+            Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MainPage())
+            );
+        },
+        child: StyledText(text, 'bold', 16),
+      ),
     );
   }
 }

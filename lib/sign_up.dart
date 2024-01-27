@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/button.dart';
-import 'package:google_solution_challange/sign_up.dart';
+import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class SignIn extends StatelessWidget {
-  SignIn({super.key});
+class SignUp extends StatelessWidget {
+  SignUp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +17,13 @@ class SignIn extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 164),
-              StyledText('Sign In', 'bold', 28),
+              StyledText('Sign Up', 'bold', 28),
               SizedBox(height: 94),
+              Input('Username', 'username.svg'),
               Input('Email', 'email.svg'),
               Input('Password', 'password.svg'),
-              Button('Sign In'),
+              Input('Confirm Password', 'confirm.svg'),
+              Button('Sign Up'),
               Container(
                 margin: EdgeInsets.only(top: 10, bottom: 20),
                 width: 310,
@@ -60,9 +62,10 @@ class SignIn extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SignUp())
-                        );                      },
-                      child: StyledText('Create new one', 'normal', 12, textColor: Color.fromRGBO(55, 235, 115, 1)))
+                          MaterialPageRoute(builder: (context) => SignIn())
+                        );
+                      },
+                      child: StyledText('Sign In', 'normal', 12, textColor: Color.fromRGBO(55, 235, 115, 1)))
                 ],
               ),
             ],
