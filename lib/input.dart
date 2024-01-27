@@ -21,15 +21,22 @@ class Input extends StatelessWidget {
               height: 22,
             ),
             Padding(padding: EdgeInsets.only(right: 8)),
-            StyledText(promptType, 'normal', 12,
-                textColor: const Color.fromRGBO(169, 169, 169, 1)),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                margin: EdgeInsets.only(right: 20),
+                child: const SizedBox(    
+                  height: 50,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter a search term',
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 4, bottom: 8),
-          width: 350,
-          height: 1,
-          color: Color.fromRGBO(44, 44, 44, 1),
         ),
       ],
     );
