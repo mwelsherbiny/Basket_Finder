@@ -14,33 +14,35 @@ class SignUp extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Center(
         child: ListView(
-          padding: const EdgeInsets.all(50),
+          padding: const EdgeInsets.all(25),
           children: [
-            const SizedBox(height: 164),
+            const SizedBox(height: 100),
             Center(child: StyledText('Sign Up', 'bold', 28)),
             const SizedBox(height: 50),
             Input('Username', 'username.svg'),
             Input('Email', 'email.svg'),
-            Input('Password', 'password.svg'),
-            Input('Confirm Password', 'confirm.svg'),
+            Input('Password', 'password.svg', hideText: true),
+            Input('Confirm Password', 'confirm.svg', hideText: true),
             Button('Sign Up'),
             Container(
               margin: const EdgeInsets.only(top: 10, bottom: 20),
-              width: 310,
-              child: Row(
-                children: [
-                  Container(
-                    width: 140,
-                    height: 1,
-                    color: const Color.fromRGBO(44, 44, 44, 1),
-                  ),
-                  StyledText(' Or ', 'normal', 16),
-                  Container(
-                    color: const Color.fromRGBO(44, 44, 44, 1),
-                    width: 140,
-                    height: 1,
-                  )
-                ],
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 140,
+                      height: 1,
+                      color: const Color.fromRGBO(44, 44, 44, 1),
+                    ),
+                    StyledText(' Or ', 'normal', 16),
+                    Container(
+                      color: const Color.fromRGBO(44, 44, 44, 1),
+                      width: 140,
+                      height: 1,
+                    )
+                  ],
+                ),
               ),
             ),
             Row(

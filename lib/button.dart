@@ -1,17 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/main_page.dart';
+import 'package:google_solution_challange/input.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Button extends StatelessWidget {
   String text;
   Button(this.text, {super.key});
 
-  void signUp() {
-    // TODO
-  }
-
   @override
   Widget build(BuildContext context) {
+    void displayError(String message) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 8),
+        ),
+      );
+    }
+
+    void signIn() async {
+      String email = Input.emailController.text;
+      String password = Input.passwordController.text;
+      try {
+        final credential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainPage(),
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        switch (e.code) {
+          case 'channel-error':
+            displayError('Please enter email and password');
+            break;
+          case 'invalid-credential':
+            displayError('Wrong password provided for that user');
+            break;
+          case 'invalid-email':
+            displayError('Invalid email address');
+            break;
+          default:
+            displayError(e.code);
+            break;
+        }
+      }
+    }
+
+    void signUp() async {
+      String email = Input.emailController.text;
+      String password = Input.passwordController.text;
+      String name = Input.usernameController.text;
+      String confirmPassword = Input.confirmPasswordController.text;
+      try {
+        if (name.isEmpty) {
+          displayError('Please enter your username');
+          throw FormatException();
+        }
+        else if (password != confirmPassword)
+        {
+          displayError('Please make sure that passwords match');
+          throw FormatException();
+        }
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        User? user = credential.user;
+        await user?.updateDisplayName(name);
+        await user?.reload();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainPage(),
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        switch (e.code) {
+          case 'channel-error':
+            displayError('Please enter email and password');
+            break;
+          case 'invalid-email':
+            displayError('Invalid email address');
+            break;
+          case 'email-already-in-use':
+            displayError('Email already in use, please sign in');
+            break;
+          default:
+            print(e.message!);
+            displayError(e.message!);
+            break;
+        }
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(top: 8),
       width: 281,
@@ -20,17 +106,7 @@ class Button extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           color: const Color.fromRGBO(55, 235, 115, 1)),
       child: TextButton(
-        onPressed: (text == 'Sign In')
-            ? () {
-                // TODO
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const MainPage()));
-              }
-            : () {
-                // TODO
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const MainPage()));
-              },
+        onPressed: (text == 'Sign In') ? signIn : signUp,
         child: StyledText(text, 'bold', 16),
       ),
     );
