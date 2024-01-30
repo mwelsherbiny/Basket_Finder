@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.0.5
+  flutter_osm_plugin: ^0.60.4
   google_sign_in: ^5.0.0
 
 

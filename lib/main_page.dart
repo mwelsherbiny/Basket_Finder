@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_solution_challange/main.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/input.dart';
-import 'package:google_solution_challange/button.dart';
-import 'package:google_solution_challange/styled_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/settings_page.dart';
+import 'package:google_solution_challange/map.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -31,6 +28,7 @@ class MainPage extends StatelessWidget {
       onWillPop: () async => false,
       child: Scaffold(
         backgroundColor: Colors.white,
+        body: MapPage(),
         bottomNavigationBar: BottomNavigationBar(
           items: [
             BottomNavigationBarItem(
