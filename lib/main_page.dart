@@ -11,17 +11,6 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    void signOut() async {
-      Input.passwordController.text = '';
-      Input.confirmPasswordController.text = '';
-      Input.usernameController.text = '';
-      Input.emailController.text = '';
-      await FirebaseAuth.instance.signOut();
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SignIn()),
-      );
-    }
 
     User? currentUser = FirebaseAuth.instance.currentUser;
     return WillPopScope(

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/sign_up.dart';
+import 'package:google_solution_challange/social_sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignIn extends StatelessWidget {
   const SignIn({super.key});
@@ -22,7 +26,11 @@ class SignIn extends StatelessWidget {
               Center(child: StyledText('Sign In', 'bold', 28)),
               const SizedBox(height: 50),
               Input('Email', 'email.svg'),
-              Input('Password', 'password.svg', hideText: true,),
+              Input(
+                'Password',
+                'password.svg',
+                hideText: true,
+              ),
               Button('Sign In'),
               Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
@@ -43,14 +51,7 @@ class SignIn extends StatelessWidget {
                   ],
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset('assets/sign_up/facebook.svg'),
-                  const SizedBox(width: 28),
-                  SvgPicture.asset('assets/sign_up/google.svg'),
-                ],
-              ),
+              SocialSignIn(),
               const SizedBox(
                 height: 20,
               ),
