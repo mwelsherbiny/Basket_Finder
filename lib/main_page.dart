@@ -1,8 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_solution_challange/button.dart';
-import 'package:google_solution_challange/sign_in.dart';
-import 'package:google_solution_challange/input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
@@ -29,6 +28,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  DatabaseReference database = FirebaseDatabase.instance.ref();
   bool canAddLocation = false;
   bool locationAdded = false;
   MapController controller = MapController(
@@ -41,26 +41,54 @@ class _MapPageState extends State<MapPage> {
     ),
   );
 
-  void addLocation() async {
-    await controller.currentLocation();
-    await controller.advancedPositionPicker();
-    if (locationAdded) {
-      GeoPoint point = await controller.getCurrentPositionAdvancedPositionPicker();
-
-      controller.addMarker(
-        point,
-        markerIcon: MarkerIcon(
-          icon: Icon(Icons.verified_user, ),
-        ),
-        iconAnchor: IconAnchor(anchor: Anchor.top),
-      );
-      controller.currentLocation();
-      locationAdded = false;
-      await controller.cancelAdvancedPositionPicker();
-    }
-  }
-
   Widget build(BuildContext context) {
+    DatabaseReference locationRef = database.child('location');
+    void fetchLocations() async
+    {
+      final locationsSnapshot = await locationRef.get();
+      final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
+      locations.forEach((key, value)
+        {
+          GeoPoint point = GeoPoint(latitude: value['latitude'], longitude: value['longitude']);
+          controller.addMarker(
+            point,
+            markerIcon: MarkerIcon(icon: Icon(Icons.verified_user),),
+          );
+        }
+      );
+    }
+    void addLocation() async {
+      await controller.currentLocation();
+      await controller.advancedPositionPicker();
+      if (locationAdded) {
+        GeoPoint point = await controller.getCurrentPositionAdvancedPositionPicker(); 
+        try{
+          final location = {
+            'latitude': point.latitude,
+            'longitude': point.longitude,
+          };
+          locationRef.push().set(location);
+          controller.addMarker(
+          point,
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.verified_user, ),
+          ),
+          iconAnchor: IconAnchor(anchor: Anchor.top),
+          );
+          controller.currentLocation();
+          locationAdded = false;
+          await controller.cancelAdvancedPositionPicker();
+        }
+        catch(e)
+        {
+          print('error');
+          print(e);
+        }
+
+      }
+    }
+
+    fetchLocations();
     return Scaffold(
       floatingActionButton: (canAddLocation)? null : FloatingActionButton(
         onPressed: () {

@@ -57,6 +57,7 @@ class DefaultFirebaseOptions {
     appId: '1:882713676357:android:46fa8070755e50c36eb12c',
     messagingSenderId: '882713676357',
     projectId: 'solution-challenge-10ea6',
+    databaseURL: 'https://solution-challenge-10ea6-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'solution-challenge-10ea6.appspot.com',
   );
 }
