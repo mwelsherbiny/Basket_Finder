@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,12 +8,13 @@ import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+User? currentUser = FirebaseAuth.instance.currentUser;
+
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    User? currentUser = FirebaseAuth.instance.currentUser;
     return WillPopScope(
       onWillPop: () async => false,
       child: MapPage(),
@@ -30,7 +32,8 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   DatabaseReference database = FirebaseDatabase.instance.ref();
   bool canAddLocation = false;
-  bool locationAdded = false;
+  bool fetchedLocations = false;
+  bool canShowDetails = false;
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -43,66 +46,74 @@ class _MapPageState extends State<MapPage> {
 
   Widget build(BuildContext context) {
     DatabaseReference locationRef = database.child('location');
-    void fetchLocations() async
-    {
+
+    void showDetails() {
+      setState(() {
+        canShowDetails = true;
+      });
+    }
+
+    void fetchLocations() async {
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
-      locations.forEach((key, value)
-        {
-          GeoPoint point = GeoPoint(latitude: value['latitude'], longitude: value['longitude']);
-          controller.addMarker(
-            point,
-            markerIcon: MarkerIcon(icon: Icon(Icons.verified_user),),
-          );
-        }
-      );
-    }
-    void addLocation() async {
-      await controller.currentLocation();
-      await controller.advancedPositionPicker();
-      if (locationAdded) {
-        GeoPoint point = await controller.getCurrentPositionAdvancedPositionPicker(); 
-        try{
-          final location = {
-            'latitude': point.latitude,
-            'longitude': point.longitude,
-          };
-          locationRef.push().set(location);
-          controller.addMarker(
+      locations.forEach((key, value) {
+        GeoPoint point = GeoPoint(
+            latitude: value['latitude'], longitude: value['longitude']);
+        controller.addMarker(
           point,
           markerIcon: MarkerIcon(
-            icon: Icon(Icons.verified_user, ),
+            icon: Icon(Icons.verified_user),
+          ),
+        );
+      });
+      fetchedLocations = true;
+    }
+
+    void addLocation() async {
+      await controller.currentLocation();
+      GeoPoint point = await controller.myLocation();
+      try {
+        final location = {
+          'latitude': point.latitude,
+          'longitude': point.longitude,
+          'uid': currentUser?.uid,
+          'found': 0,
+          "not_found": 0,
+        };
+        locationRef.push().set(location);
+        controller.addMarker(
+          point,
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.verified_user,
+            ),
           ),
           iconAnchor: IconAnchor(anchor: Anchor.top),
-          );
-          controller.currentLocation();
-          locationAdded = false;
-          await controller.cancelAdvancedPositionPicker();
-        }
-        catch(e)
-        {
-          print('error');
-          print(e);
-        }
-
+        );
+      } catch (e) {
+        print('error');
+        print(e);
       }
     }
 
-    fetchLocations();
+    if (!fetchedLocations) {
+      fetchLocations();
+    }
     return Scaffold(
-      floatingActionButton: (canAddLocation)? null : FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            controller.currentLocation();
-          });
-        },
-        backgroundColor: Colors.white,
-        child: SvgPicture.asset(
-          'assets/main/location.svg',
-        ),
-      ),
+      floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                setState(() {
+                  controller.currentLocation();
+                });
+              },
+              backgroundColor: Colors.white,
+              child: SvgPicture.asset(
+                'assets/main/location.svg',
+              ),
+            ),
       backgroundColor: Colors.white,
       body: OSMFlutter(
+        onGeoPointClicked: (p) => showDetails(),
         controller: controller,
         osmOption: OSMOption(
           userTrackingOption: const UserTrackingOption(
@@ -152,7 +163,6 @@ class _MapPageState extends State<MapPage> {
                 onPressed: () {
                   setState(() {
                     canAddLocation = false;
-                    locationAdded = true;
                     addLocation();
                   });
                 },
@@ -164,39 +174,61 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
             )
-          : BottomNavigationBar(
-              items: [
-                BottomNavigationBarItem(
-                  label: 'Add Location',
-                  icon: SvgPicture.asset('assets/main/add_location.svg'),
-                ),
-                BottomNavigationBarItem(
-                  label: 'Find Nearest',
-                  icon: SvgPicture.asset('assets/main/find_nearest.svg'),
-                ),
-                BottomNavigationBarItem(
-                  label: 'Settings',
-                  icon: SvgPicture.asset('assets/main/settings.svg'),
-                ),
-              ],
-              onTap: (int index) {
-                if (index == 2) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => settingsPage(),
+          : (canShowDetails)
+              ? Container(
+                  height: 150,
+                  child: Column(
+                    children: [
+                      Text('Added by ........'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: null,
+                            child: Text('Found'),
+                          ),                           
+                          TextButton(
+                            onPressed: null,
+                            child: Text('Not Found'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              : BottomNavigationBar(
+                  items: [
+                    BottomNavigationBarItem(
+                      label: 'Add Location',
+                      icon: SvgPicture.asset('assets/main/add_location.svg'),
                     ),
-                  );
-                } else if (index == 1) {
-                  // TODO: find nearest
-                } else if (index == 0) {
-                  setState(() {
-                    canAddLocation = true;
-                    addLocation();
-                  });
-                }
-              },
-            ),
+                    BottomNavigationBarItem(
+                      label: 'Find Nearest',
+                      icon: SvgPicture.asset('assets/main/find_nearest.svg'),
+                    ),
+                    BottomNavigationBarItem(
+                      label: 'Settings',
+                      icon: SvgPicture.asset('assets/main/settings.svg'),
+                    ),
+                  ],
+                  onTap: (int index) {
+                    if (index == 2) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => settingsPage(),
+                        ),
+                      );
+                    } else if (index == 1) {
+                      // TODO: find nearest
+                    } else if (index == 0) {
+                      setState(() {
+                        canAddLocation = true;
+                        controller.currentLocation();
+                      });
+                    }
+                  },
+                ),
     );
   }
 }

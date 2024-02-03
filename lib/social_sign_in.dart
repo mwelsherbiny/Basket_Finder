@@ -1,17 +1,21 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/main_page.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class SocialSignIn extends StatelessWidget
 {
-  const SocialSignIn({super.key});
+  SocialSignIn({super.key});
 
   @override
   Widget build(BuildContext context)
   {
+    DatabaseReference database = FirebaseDatabase.instance.ref();
+    DatabaseReference userRef = database.child('user');
     void signInWithGoogle() async {
       try
       {
@@ -31,6 +35,30 @@ class SocialSignIn extends StatelessWidget
         // Once signed in, return the UserCredential
         await FirebaseAuth.instance.signInWithCredential(credential);
 
+        String? uid = FirebaseAuth.instance.currentUser?.uid;
+        bool alreadyExists = false;
+        try
+        {
+          final userSnapshot = await userRef.get();
+          final users = userSnapshot.value as Map<dynamic, dynamic>;
+          users.forEach((key, value) {
+          if(value['id'] == uid)
+          {
+            alreadyExists = true;
+            throw FormatException();
+          }
+          });
+        }
+        catch(e) {}
+        if(!alreadyExists)
+        {
+          Map<dynamic, dynamic> userEntry = 
+          {
+            'id': currentUser?.uid,
+            'credibility': 0,
+          };
+          await userRef.push().set(userEntry);
+        }
         Navigator.push(
           context,
           MaterialPageRoute(

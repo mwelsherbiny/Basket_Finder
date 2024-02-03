@@ -1,9 +1,11 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/main_page.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class Button extends StatelessWidget {
   String text;
@@ -11,6 +13,8 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    DatabaseReference database = FirebaseDatabase.instance.ref();
+    DatabaseReference userRef = database.child('user');
     void displayError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -73,6 +77,13 @@ class Button extends StatelessWidget {
         User? user = credential.user;
         await user?.updateDisplayName(name);
         await user?.reload();
+        String? uid = currentUser?.uid;
+        Map<dynamic, dynamic> userEntry = 
+        {
+          'id': uid,
+          'credibility': 0,
+        };
+        await userRef.push().set(userEntry);
         Navigator.push(
           context,
           MaterialPageRoute(
