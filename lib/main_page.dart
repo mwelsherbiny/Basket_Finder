@@ -53,21 +53,7 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     DatabaseReference locationRef = database.child('location');
     DatabaseReference userRef = database.child('user');
-
-    void reportLocation(bool found) async {
-      final currLocationSnapshot = await locationRef.child(currentLocationKey).get();
-      final currentLocationValue = currLocationSnapshot.value as Map<dynamic, dynamic>;
-      int foundValue = 0;
-      if(found)
-      {
-        foundValue = currentLocationValue['found'] + 1;
-      }
-      else
-      {
-        foundValue = currentLocationValue['found'] - 1;
-      }
-      await locationRef.child(currentLocationKey).update({'found': foundValue});
-    }
+    DatabaseReference reportRef = database.child('report');
 
     void displayError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,6 +62,48 @@ class _MapPageState extends State<MapPage> {
           duration: Duration(seconds: 5),
         ),
       );
+    }
+    void reportLocation(bool found) async {
+      bool alreadyReported = false;
+      final uidSnapshot = await locationRef.child(currentLocationKey).child('uid').get();
+      String uid = uidSnapshot.value as String;
+      if (currentUser?.uid == uid)
+      {
+        displayError('Can\'t report locations added by you');
+        return;
+      }
+      try
+      {
+        final reportsSnapshot = await reportRef.get();
+        final reports = reportsSnapshot.value as Map<dynamic, dynamic>;
+        reports.forEach((key, value) {
+          if (key == currentUser?.uid && value == currentLocationKey)
+          {
+            alreadyReported = true;
+            return;
+          }
+        });
+      } 
+      catch(e) {}    
+      if (alreadyReported)
+      {
+        displayError('Can only report location once');
+        return;
+      }
+      reportRef.set({currentUser?.uid: currentLocationKey});
+      final currLocationSnapshot = await locationRef.child(currentLocationKey).get();
+      final currentLocationValue = currLocationSnapshot.value as Map<dynamic, dynamic>;
+      int foundValue = 0;
+      if(found)
+      {
+        foundValue = currentLocationValue['found'] + 1;
+        await locationRef.child(currentLocationKey).update({'found': foundValue});
+      }
+      else
+      {
+        foundValue = currentLocationValue['not_found'] + 1;
+        await locationRef.child(currentLocationKey).update({'not_found': foundValue});
+      }
     }
 
     void showDetails(GeoPoint point) async {
