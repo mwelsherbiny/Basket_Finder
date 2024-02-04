@@ -77,13 +77,13 @@ class Button extends StatelessWidget {
         User? user = credential.user;
         await user?.updateDisplayName(name);
         await user?.reload();
-        String? uid = currentUser?.uid;
+        String? uid = user?.uid;
         Map<dynamic, dynamic> userEntry = 
         {
-          'id': uid,
+          'name': name,
           'credibility': 0,
         };
-        await userRef.push().set(userEntry);
+        await userRef.child(uid!).set(userEntry);
         Navigator.push(
           context,
           MaterialPageRoute(

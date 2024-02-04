@@ -36,13 +36,14 @@ class SocialSignIn extends StatelessWidget
         await FirebaseAuth.instance.signInWithCredential(credential);
 
         String? uid = FirebaseAuth.instance.currentUser?.uid;
+        print(uid);
         bool alreadyExists = false;
         try
         {
           final userSnapshot = await userRef.get();
           final users = userSnapshot.value as Map<dynamic, dynamic>;
           users.forEach((key, value) {
-          if(value['id'] == uid)
+          if(key == uid)
           {
             alreadyExists = true;
             throw FormatException();
@@ -54,10 +55,10 @@ class SocialSignIn extends StatelessWidget
         {
           Map<dynamic, dynamic> userEntry = 
           {
-            'id': currentUser?.uid,
+            'name': currentUser?.displayName,
             'credibility': 0,
           };
-          await userRef.push().set(userEntry);
+          await userRef.child(uid!).set(userEntry);
         }
         Navigator.push(
           context,

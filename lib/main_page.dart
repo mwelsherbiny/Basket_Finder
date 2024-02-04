@@ -1,14 +1,17 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 User? currentUser = FirebaseAuth.instance.currentUser;
+GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -31,9 +34,12 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   DatabaseReference database = FirebaseDatabase.instance.ref();
+  String currentLocationKey = ''; 
   bool canAddLocation = false;
   bool fetchedLocations = false;
   bool canShowDetails = false;
+  bool canReport = false;
+  String contributor = '';
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -46,14 +52,71 @@ class _MapPageState extends State<MapPage> {
 
   Widget build(BuildContext context) {
     DatabaseReference locationRef = database.child('location');
+    DatabaseReference userRef = database.child('user');
 
-    void showDetails() {
-      setState(() {
-        canShowDetails = true;
-      });
+    void reportLocation(bool found) async {
+      final currLocationSnapshot = await locationRef.child(currentLocationKey).get();
+      final currentLocationValue = currLocationSnapshot.value as Map<dynamic, dynamic>;
+      int foundValue = 0;
+      if(found)
+      {
+        foundValue = currentLocationValue['found'] + 1;
+      }
+      else
+      {
+        foundValue = currentLocationValue['found'] - 1;
+      }
+      await locationRef.child(currentLocationKey).update({'found': foundValue});
+    }
+
+    void displayError(String message) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+
+    void showDetails(GeoPoint point) async {
+      await controller.goToLocation(point);
+      currentPoint = point;
+      final locationSnapshot = await locationRef.get();
+      final userSnapshot = await userRef.get();
+      final users = userSnapshot.value as Map<dynamic, dynamic>;
+      final locations = locationSnapshot.value as Map<dynamic, dynamic>;
+      locations.forEach(
+        (locKey, locValue) => {
+          if (locValue['latitude'] == point.latitude &&
+              locValue['longitude'] == point.longitude)
+            {
+              currentLocationKey = locKey,
+              users.forEach((userKey, userValue) {
+                if (locValue['uid'] == userKey) {
+                  contributor = userValue['name'];
+                  return;
+                }
+              })
+            }
+        },
+      );
+      GeoPoint userLocation = await controller.myLocation();
+      if ((userLocation.latitude - currentPoint.latitude).abs() <= 0.0001 &&
+          (userLocation.longitude - currentPoint.longitude).abs() <= 0.0001)
+      {
+        canReport = true;
+      }
+      else
+      {
+        canReport = false;
+      }
+        setState(() {
+          canShowDetails = true;
+        });
     }
 
     void fetchLocations() async {
+      fetchedLocations = true;
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
       locations.forEach((key, value) {
@@ -66,7 +129,6 @@ class _MapPageState extends State<MapPage> {
           ),
         );
       });
-      fetchedLocations = true;
     }
 
     void addLocation() async {
@@ -101,19 +163,19 @@ class _MapPageState extends State<MapPage> {
     }
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  controller.currentLocation();
-                });
-              },
-              backgroundColor: Colors.white,
-              child: SvgPicture.asset(
-                'assets/main/location.svg',
-              ),
-            ),
+        onPressed: () {
+          setState(() {
+            controller.currentLocation();
+          });
+        },
+        backgroundColor: Colors.white,
+        child: SvgPicture.asset(
+          'assets/main/location.svg',
+        ),
+      ),
       backgroundColor: Colors.white,
       body: OSMFlutter(
-        onGeoPointClicked: (p) => showDetails(),
+        onGeoPointClicked: (p) => showDetails(p),
         controller: controller,
         osmOption: OSMOption(
           userTrackingOption: const UserTrackingOption(
@@ -177,23 +239,39 @@ class _MapPageState extends State<MapPage> {
           : (canShowDetails)
               ? Container(
                   height: 150,
-                  child: Column(
-                    children: [
-                      Text('Added by ........'),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton(
-                            onPressed: null,
-                            child: Text('Found'),
-                          ),                           
-                          TextButton(
-                            onPressed: null,
-                            child: Text('Not Found'),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: Center(
+                    child: Column(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              canShowDetails = false;
+                            });
+                          },
+                          child: Text('Done'),
+                        ),
+                        Text('Added by $contributor'),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: (canReport)
+                                  ? () => reportLocation(true)
+                                  : () => displayError(
+                                      'Please go near the marker to report'),
+                              child: Text('Found'),
+                            ),
+                            TextButton(
+                              onPressed: (canReport)
+                                  ? () => reportLocation(false)
+                                  : () => displayError(
+                                      'Please go near the marker to report'),
+                              child: Text('Not Found'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : BottomNavigationBar(
