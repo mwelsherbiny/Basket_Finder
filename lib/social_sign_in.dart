@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/main_page.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 
 class SocialSignIn extends StatelessWidget
 {
@@ -57,6 +58,8 @@ class SocialSignIn extends StatelessWidget
           {
             'name': currentUser?.displayName,
             'credibility': 0,
+            'locations': 5,
+            'last_updated': DateFormat('yMd').format(DateTime.now())
           };
           await userRef.child(uid!).set(userEntry);
         }

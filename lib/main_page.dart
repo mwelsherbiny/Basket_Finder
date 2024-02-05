@@ -9,6 +9,7 @@ import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 
 User? currentUser = FirebaseAuth.instance.currentUser;
 GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
@@ -160,6 +161,35 @@ class _MapPageState extends State<MapPage> {
     }
 
     void addLocation() async {
+      final locationsSnapshot = await userRef.child(currentUser!.uid).child('locations').get();
+      final locations = locationsSnapshot.value as int;      
+      if (locations == 0)
+      {
+        bool upToDate = true;
+        final currDate = DateTime.now();
+        String currDateFormatted = DateFormat('yMd').format(currDate);
+        List<String> currDateList = currDateFormatted.split('/');
+        final lastUpdatedSnapshot = await userRef.child(currentUser!.uid).child('last_updated').get();
+        final lastUpdated = lastUpdatedSnapshot.value as String;
+        List<String> lastUpdatedList = lastUpdated.split('/');
+        for(int i = 0; i < 3; i++)
+        {
+          if (int.parse(lastUpdatedList[i]) - int.parse(currDateList[i]) >= 1)
+          {
+            upToDate = false;
+            break;
+          }
+        }
+        if (upToDate)
+        {
+          displayError('Can only add 5 locations per day');
+          return;
+        }
+        else
+        {
+          await userRef.child(currentUser!.uid).update({'locations': 5});
+        }
+      }
       await controller.currentLocation();
       GeoPoint point = await controller.myLocation();
       try {
@@ -178,10 +208,9 @@ class _MapPageState extends State<MapPage> {
               Icons.verified_user,
             ),
           ),
-          iconAnchor: IconAnchor(anchor: Anchor.top),
         );
+        await userRef.child(currentUser!.uid).update({'locations': locations - 1});
       } catch (e) {
-        print('error');
         print(e);
       }
     }

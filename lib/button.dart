@@ -6,6 +6,7 @@ import 'package:google_solution_challange/main_page.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 
 class Button extends StatelessWidget {
   String text;
@@ -78,10 +79,13 @@ class Button extends StatelessWidget {
         await user?.updateDisplayName(name);
         await user?.reload();
         String? uid = user?.uid;
+
         Map<dynamic, dynamic> userEntry = 
         {
           'name': name,
           'credibility': 0,
+          'locations': 5,
+          'last_updated': DateFormat('yMd').format(DateTime.now())
         };
         await userRef.child(uid!).set(userEntry);
         Navigator.push(
