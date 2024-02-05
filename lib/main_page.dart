@@ -34,7 +34,6 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  DatabaseReference database = FirebaseDatabase.instance.ref();
   String currentLocationKey = ''; 
   bool canAddLocation = false;
   bool fetchedLocations = false;
@@ -52,6 +51,7 @@ class _MapPageState extends State<MapPage> {
   );
 
   Widget build(BuildContext context) {
+    DatabaseReference database = FirebaseDatabase.instance.ref();
     DatabaseReference locationRef = database.child('location');
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
@@ -95,7 +95,7 @@ class _MapPageState extends State<MapPage> {
           }
         });
       } 
-      catch(e) {}    
+      catch(e) { print(e); }    
       if (alreadyReported)
       {
         displayError('Can only report location once');
@@ -151,9 +151,9 @@ class _MapPageState extends State<MapPage> {
       {
         canReport = false;
       }
-        setState(() {
-          canShowDetails = true;
-        });
+      setState(() {
+        canShowDetails = true;
+      });
     }
 
     void fetchLocations() async {
@@ -182,7 +182,7 @@ class _MapPageState extends State<MapPage> {
       {
         bool upToDate = true;
         final currDate = DateTime.now();
-        String currDateFormatted = DateFormat('yMd').format(currDate);
+        String currDateFormatted = DateFormat('yMd').format(currDate); // month/day/year
         List<String> currDateList = currDateFormatted.split('/');
         final lastUpdatedSnapshot = await userRef.child(currentUser!.uid).child('last_updated').get();
         final lastUpdated = lastUpdatedSnapshot.value as String;
@@ -202,6 +202,7 @@ class _MapPageState extends State<MapPage> {
         }
         else
         {
+          await userRef.child(currentUser!.uid).update({'last_updated': currDateFormatted});
           await userRef.child(currentUser!.uid).update({'locations': 5});
         }
       }
