@@ -64,17 +64,7 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     }
-      Image _determineMarkerColor(int found, int notFound) {
-      if (notFound > 0) {
-        return Image(image: AssetImage('assets/Colored_Markers/red.png'));
-      } else if (found >= 3) {
-        return Image(image: AssetImage('assets/Colored_Markers/green.png'));
-      } else {
-        return Image(image: AssetImage('assets/Colored_Markers/orange.png'));
-      }
-    }
     void reportLocation(bool found) async {
-
       bool alreadyReported = false;
       final uidSnapshot = await locationRef.child(currentLocationKey).child('uid').get();
       String uid = uidSnapshot.value as String;
@@ -105,8 +95,6 @@ class _MapPageState extends State<MapPage> {
       final currLocationSnapshot = await locationRef.child(currentLocationKey).get();
       final currentLocationValue = currLocationSnapshot.value as Map<dynamic, dynamic>;
       int foundValue = 0;
-
-        
       if(found)
       {
         foundValue = currentLocationValue['found'] + 1;
@@ -161,16 +149,12 @@ class _MapPageState extends State<MapPage> {
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
       locations.forEach((key, value) {
-        final found = value['found'] as int;
-        final notFound = value['not_found'] as int;
-        final updatedMarker = _determineMarkerColor(found, notFound);
         GeoPoint point = GeoPoint(
             latitude: value['latitude'], longitude: value['longitude']);
-            controller.addMarker(
-            point,
-            markerIcon: MarkerIcon(
-            // icon: updatedMarker
-            iconWidget: Image(image: updatedMarker.image)
+        controller.addMarker(
+          point,
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.verified_user),
           ),
         );
       });
@@ -178,7 +162,7 @@ class _MapPageState extends State<MapPage> {
 
     void addLocation() async {
       final locationsSnapshot = await userRef.child(currentUser!.uid).child('locations').get();
-      final locations = locationsSnapshot.value as int;      
+      int locations = locationsSnapshot.value as int;      
       if (locations == 0)
       {
         bool upToDate = true;
@@ -190,7 +174,7 @@ class _MapPageState extends State<MapPage> {
         List<String> lastUpdatedList = lastUpdated.split('/');
         for(int i = 0; i < 3; i++)
         {
-          if (int.parse(lastUpdatedList[i]) - int.parse(currDateList[i]) >= 1)
+          if (int.parse(currDateList[i]) - int.parse(lastUpdatedList[i]) >= 1)
           {
             upToDate = false;
             break;
@@ -203,8 +187,9 @@ class _MapPageState extends State<MapPage> {
         }
         else
         {
+          locations = 5;
           await userRef.child(currentUser!.uid).update({'last_updated': currDateFormatted});
-          await userRef.child(currentUser!.uid).update({'locations': 5});
+          await userRef.child(currentUser!.uid).update({'locations': locations});
         }
       }
       await controller.currentLocation();
