@@ -56,6 +56,10 @@ class _MapPageState extends State<MapPage> {
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
 
+    List<GeoPoint> greenPoints = [];
+    List<GeoPoint> redPoints = [];
+    List<GeoPoint> orangePoints = [];
+
     void displayError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -108,11 +112,27 @@ class _MapPageState extends State<MapPage> {
       int foundValue = 0;
       if (found) {
         foundValue = currentLocationValue['found'] + 1;
+        if (foundValue == 3)
+        {
+          locationRef.child(currentLocationKey).update({'exists': true});
+        }
         await locationRef
             .child(currentLocationKey)
             .update({'found': foundValue});
       } else {
         foundValue = currentLocationValue['not_found'] + 1;
+        bool exists = currentLocationValue['exists'];
+        if (foundValue == 3)
+        {
+          if (!exists)
+          {
+            final credibilitySnapshot = await userRef.child(uid).child('credibility').get();
+            int credibility = credibilitySnapshot.value as int;
+            await userRef.child(uid).update({'credibility': credibility - 1});
+          }
+          await locationRef.child(currentLocationKey).remove();
+          return;
+        }
         await locationRef
             .child(currentLocationKey)
             .update({'not_found': foundValue});
@@ -154,9 +174,6 @@ class _MapPageState extends State<MapPage> {
     }
 
     void fetchLocations() async {
-      List<GeoPoint> greenPoints = [];
-      List<GeoPoint> redPoints = [];
-      List<GeoPoint> orangePoints = [];
       fetchedLocations = true;
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
@@ -255,7 +272,8 @@ class _MapPageState extends State<MapPage> {
           'longitude': point.longitude,
           'uid': currentUser?.uid,
           'found': 0,
-          "not_found": 0,
+          'not_found': 0,
+          'exists': false,
         };
         locationRef.push().set(location);
         controller.addMarker(point);
@@ -407,6 +425,7 @@ class _MapPageState extends State<MapPage> {
                         ),
                       );
                     } else if (index == 1) {
+                      
                       // TODO: find nearest
                     } else if (index == 0) {
                       setState(() {

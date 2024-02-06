@@ -57,7 +57,7 @@ class SocialSignIn extends StatelessWidget
           Map<dynamic, dynamic> userEntry = 
           {
             'name': currentUser?.displayName,
-            'credibility': 0,
+            'credibility': 3,
             'locations': 5,
             'last_updated': DateFormat('yMd').format(DateTime.now())
           };
