@@ -64,6 +64,15 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     }
+    Image _determineMarkerColor(int found, int notFound) {
+      if (notFound > 0) {
+        return Image(image: AssetImage('assets/Colored_Markers/red.png'));
+      } else if (found >= 3) {
+        return Image(image: AssetImage('assets/Colored_Markers/green.png'));
+      } else {
+        return Image(image: AssetImage('assets/Colored_Markers/orange.png'));
+      }
+    }
     void reportLocation(bool found) async {
       bool alreadyReported = false;
       final uidSnapshot = await locationRef.child(currentLocationKey).child('uid').get();
@@ -149,12 +158,16 @@ class _MapPageState extends State<MapPage> {
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
       locations.forEach((key, value) {
+        final found = value['found'] as int;
+        final notFound = value['not_found'] as int;
+        final updatedMarker = _determineMarkerColor(found, notFound);
         GeoPoint point = GeoPoint(
             latitude: value['latitude'], longitude: value['longitude']);
-        controller.addMarker(
-          point,
-          markerIcon: MarkerIcon(
-            icon: Icon(Icons.verified_user),
+            controller.addMarker(
+            point,
+            markerIcon: MarkerIcon(
+            // icon: updatedMarker
+            iconWidget: Image(image: updatedMarker.image)
           ),
         );
       });
