@@ -39,7 +39,11 @@ class _MapPageState extends State<MapPage> {
   bool fetchedLocations = false;
   bool canShowDetails = false;
   bool canReport = false;
-  String contributor = '';
+  List<String> contributor = [];
+  bool showWindow = false;
+  bool? green = false;
+  bool? red = false;
+  bool? orange = false;
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -79,6 +83,25 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
+    Widget popupWindow() {
+      return AlertDialog(
+        title: Text('Filter'),
+        content: Column(
+          children: [
+            Checkbox(
+              value: green,
+              checkColor: Colors.green,
+              onChanged: (bool? newBool) {
+                setState(() {
+                  green = newBool;
+                });
+              },
+            )
+          ],
+        ),
+      );
+    }
+
     void reportLocation(bool found) async {
       bool alreadyReported = false;
       final uidSnapshot =
@@ -112,21 +135,24 @@ class _MapPageState extends State<MapPage> {
       int foundValue = 0;
       if (found) {
         foundValue = currentLocationValue['found'] + 1;
-        if (foundValue == 3)
-        {
+        final userSnapshot =
+            await userRef.child(uid).get();
+        final user = userSnapshot.value as Map<dynamic, dynamic>;
+        final credValue = user['credibility'];
+        if (foundValue == 3) {
           locationRef.child(currentLocationKey).update({'exists': true});
         }
         await locationRef
             .child(currentLocationKey)
             .update({'found': foundValue});
+        await userRef.child(uid).update({'credibility': credValue + 1});
       } else {
         foundValue = currentLocationValue['not_found'] + 1;
         bool exists = currentLocationValue['exists'];
-        if (foundValue == 3)
-        {
-          if (!exists)
-          {
-            final credibilitySnapshot = await userRef.child(uid).child('credibility').get();
+        if (foundValue == 3) {
+          if (!exists) {
+            final credibilitySnapshot =
+                await userRef.child(uid).child('credibility').get();
             int credibility = credibilitySnapshot.value as int;
             await userRef.child(uid).update({'credibility': credibility - 1});
           }
@@ -154,7 +180,7 @@ class _MapPageState extends State<MapPage> {
               currentLocationKey = locKey,
               users.forEach((userKey, userValue) {
                 if (locValue['uid'] == userKey) {
-                  contributor = userValue['name'];
+                  contributor = [userKey, userValue['name']];
                   return;
                 }
               })
@@ -289,16 +315,39 @@ class _MapPageState extends State<MapPage> {
       fetchLocations();
     }
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            controller.currentLocation();
-          });
-        },
-        backgroundColor: Colors.white,
-        child: SvgPicture.asset(
-          'assets/main/location.svg',
-        ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                controller.currentLocation();
+              });
+            },
+            backgroundColor: Colors.white,
+            child: SvgPicture.asset(
+              'assets/Colored_Markers/target_location.svg',
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          FloatingActionButton(
+            backgroundColor: Colors.white,
+            child: SvgPicture.asset(
+              'assets/Colored_Markers/filter.svg',
+            ),
+            onPressed: () => setState(() {
+              showWindow = true;
+            }),
+          ),
+          showWindow
+              ? popupWindow()
+              : SizedBox(
+                  width: 0,
+                  height: 0,
+                )
+        ],
       ),
       backgroundColor: Colors.white,
       body: OSMFlutter(
@@ -377,7 +426,7 @@ class _MapPageState extends State<MapPage> {
                           },
                           child: Text('Done'),
                         ),
-                        Text('Added by $contributor'),
+                        Text('Added by ${(contributor[0] == currentUser?.uid)? 'you' : contributor[1]}'),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -425,7 +474,6 @@ class _MapPageState extends State<MapPage> {
                         ),
                       );
                     } else if (index == 1) {
-                      
                       // TODO: find nearest
                     } else if (index == 0) {
                       setState(() {
