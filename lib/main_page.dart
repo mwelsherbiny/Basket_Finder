@@ -42,9 +42,9 @@ class _MapPageState extends State<MapPage> {
   bool canReport = false;
   List<String> contributor = [];
   bool showWindow = false;
-  bool? green = false;
-  bool? red = false;
-  bool? orange = false;
+  bool? green = true;
+  bool? red = true;
+  bool? orange = true;
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -189,9 +189,11 @@ class _MapPageState extends State<MapPage> {
 
     void fetchLocations() async {
       fetchedLocations = true;
-      final locationsSnapshot = await locationRef.get();
-      final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
-      locations.forEach((key, value) {
+      try
+      {
+        final locationsSnapshot = await locationRef.get();
+        final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
+        locations.forEach((key, value) {
         final found = value['found'] as int;
         final notFound = value['not_found'] as int;
         final updatedMarker = _determineMarkerColor(found, notFound);
@@ -208,7 +210,16 @@ class _MapPageState extends State<MapPage> {
             orangePoints.add(point);
             break;
         }
-      });
+        });
+      }
+      catch (e)
+      {
+        print(e);
+        await controller.setStaticPosition([], 'green');
+        await controller.setStaticPosition([], 'orange');
+        await controller.setStaticPosition([], 'red');
+        return;
+      }
       await controller.setStaticPosition(greenPoints, 'green');
       await controller.setMarkerOfStaticPoint(
           id: 'green',
@@ -386,6 +397,17 @@ class _MapPageState extends State<MapPage> {
                   }),
                 );
               }),
+              SizedBox(height: 20,),
+              FloatingActionButton(
+                backgroundColor: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/Colored_Markers/refresh.svg',
+                ),
+                onPressed: () {
+                setState(() {
+                  fetchLocations();
+                });
+              })
         ],
       ),
       backgroundColor: Colors.white,
