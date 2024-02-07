@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/input.dart';
@@ -8,38 +8,28 @@ import 'package:google_solution_challange/rules_page.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 
-class settingsPage extends StatefulWidget {
-  const settingsPage({super.key});
-  
+DatabaseReference database = FirebaseDatabase.instance.ref();
+DatabaseReference userRef = database.child('user');
 
-  @override
-  State<settingsPage> createState() => _settingsPageState();
-}
-
-class _settingsPageState extends State<settingsPage> {
+class settingsPage extends StatelessWidget {
   User? currentUser = FirebaseAuth.instance.currentUser;
+  // Constructor
+  settingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    DatabaseReference database = FirebaseDatabase.instance.ref(); 
-    DatabaseReference userRef = database.child('user');
-    DatabaseReference userId = userRef.child(currentUser!.uid);
-    DatabaseReference credibility  = userId.child('credibility');
-    // DatabaseReference credibility  = database.child('test');
-    String realtime_credibility = '0';
-    String realtime_rewards = '0';
-    String realtime_locations = '0';
-    credibility.onValue.listen(
-    (event) {
-      setState(() {
-        realtime_credibility = event.snapshot.value.toString();
-        // print(realtime_credibility);
-      });
-    } 
-    );
     void showRules() {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Rules()));
     }
-    
+    String realtime_credibility = '0';
+    String realtime_rewards = '0';
+    String realtime_locations = '0';
+    userRef.onValue.listen(
+      (event) {
+        
+      } 
+      );
+
     void signOut() async {
       Input.passwordController.text = '';
       Input.confirmPasswordController.text = '';
@@ -51,7 +41,7 @@ class _settingsPageState extends State<settingsPage> {
         MaterialPageRoute(builder: (context) => const SignIn()),
       );
     }
-
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -92,29 +82,7 @@ class _settingsPageState extends State<settingsPage> {
                                       'assets/settings_page/credibility.svg',
                                       width: 30,
                                     ),
-                                    // Text(realtime_credibility),
-                                    StreamBuilder<String>(
-                                    stream: credibility.onValue.map((event) => event.snapshot.value.toString()),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasError) {
-                                        return Text('Error: ${snapshot.error}');
-                                      }
-
-                                      switch (snapshot.connectionState) {
-                                        case ConnectionState.waiting:
-                                          return Text('Loading...');
-                                        default:
-                                          return Text(
-                                            snapshot.data!, // Access the latest credibility value
-                                            style: TextStyle(
-                                              // Apply your desired text style here
-                                              fontSize: 20, // For example
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          );
-                                      }
-                                    },
-                                  ),
+                                    StyledText(realtime_credibility, 'normal', 20),
                                     StyledText('My credibility', 'normal', 12)
                                 ],
                               ),
@@ -134,7 +102,7 @@ class _settingsPageState extends State<settingsPage> {
                                       'assets/settings_page/reward.svg',
                                       width: 29,
                                     ),
-                                    StyledText(realtime_rewards, 'normal', 20),
+                                    StyledText(realtime_credibility, 'normal', 20),
                                     StyledText('Rewards', 'normal', 12)
                                 ],
                               ),
@@ -154,7 +122,7 @@ class _settingsPageState extends State<settingsPage> {
                                       'assets/settings_page/add_marker.svg',
                                       width: 30,
                                     ),
-                                    StyledText(realtime_locations, 'normal', 20),
+                                    StyledText(realtime_credibility, 'normal', 20),
                                     StyledText('Locations', 'normal', 12)
                                 ],
                               ),

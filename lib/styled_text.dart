@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class StyledText extends StatelessWidget {
   StyledText(this.text, this.weight, this.size,
@@ -12,7 +13,7 @@ class StyledText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(
+      style:  TextStyle(
         fontSize: size,
         fontWeight: (weight == 'normal') ? FontWeight.w400 : FontWeight.w700,
         color: textColor,
