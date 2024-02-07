@@ -83,7 +83,7 @@ class Button extends StatelessWidget {
         Map<dynamic, dynamic> userEntry = 
         {
           'name': name,
-          'credibility': 0,
+          'credibility': 3,
           'locations': 5,
           'last_updated': DateFormat('yMd').format(DateTime.now())
         };
