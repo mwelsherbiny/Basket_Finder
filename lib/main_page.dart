@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_solution_challange/button.dart';
+import 'package:google_solution_challange/main_button.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 
 User? currentUser = FirebaseAuth.instance.currentUser;
 GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
+Color mainColor = Color.fromRGBO(55, 235, 115, 1);
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -64,6 +65,13 @@ class _MapPageState extends State<MapPage> {
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
 
+    void applyFilter()
+    {
+      (green == false)? controller.setStaticPosition([], 'green') : controller.setStaticPosition(greenPoints, 'green');
+      (red == false)? controller.setStaticPosition([], 'red') : controller.setStaticPosition(redPoints, 'red');
+      (orange == false)? controller.setStaticPosition([], 'orange') : controller.setStaticPosition(orangePoints, 'orange');
+    }
+    
     void displayError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -81,25 +89,6 @@ class _MapPageState extends State<MapPage> {
       } else {
         return 'orange';
       }
-    }
-
-    Widget popupWindow() {
-      return AlertDialog(
-        title: Text('Filter'),
-        content: Column(
-          children: [
-            Checkbox(
-              value: green,
-              checkColor: Colors.green,
-              onChanged: (bool? newBool) {
-                setState(() {
-                  green = newBool;
-                });
-              },
-            )
-          ],
-        ),
-      );
     }
 
     void reportLocation(bool found) async {
@@ -135,8 +124,7 @@ class _MapPageState extends State<MapPage> {
       int foundValue = 0;
       if (found) {
         foundValue = currentLocationValue['found'] + 1;
-        final userSnapshot =
-            await userRef.child(uid).get();
+        final userSnapshot = await userRef.child(uid).get();
         final user = userSnapshot.value as Map<dynamic, dynamic>;
         final credValue = user['credibility'];
         if (foundValue == 3) {
@@ -333,20 +321,71 @@ class _MapPageState extends State<MapPage> {
             height: 20,
           ),
           FloatingActionButton(
-            backgroundColor: Colors.white,
-            child: SvgPicture.asset(
-              'assets/Colored_Markers/filter.svg',
-            ),
-            onPressed: () => setState(() {
-              showWindow = true;
-            }),
-          ),
-          showWindow
-              ? popupWindow()
-              : SizedBox(
-                  width: 0,
-                  height: 0,
-                )
+              backgroundColor: Colors.white,
+              child: SvgPicture.asset(
+                'assets/Colored_Markers/filter.svg',
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                    return AlertDialog(
+                      backgroundColor: Colors.white,
+                      surfaceTintColor: mainColor,
+                      title: Text('Filter'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(Color.fromRGBO(44, 186, 91, 1)),
+                            fillColor: MaterialStatePropertyAll(mainColor),
+                            title: Text('Likely To Find'),
+                            value: green,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  green = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(Color.fromARGB(255, 211, 127, 0)),
+                            fillColor: MaterialStatePropertyAll(Colors.orange),
+                            title: Text('Not Confirmed'),
+                            value: orange,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  orange = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(const Color.fromARGB(255, 154, 40, 32)),
+                            fillColor: MaterialStatePropertyAll(Colors.red),
+                            title: Text('Not Likely To Find'),
+                            value: red,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  red = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          MainButton('Apply Filter', applyFilter),
+                        ],
+                      ),
+                    );
+                  }),
+                );
+              }),
         ],
       ),
       backgroundColor: Colors.white,
@@ -426,7 +465,8 @@ class _MapPageState extends State<MapPage> {
                           },
                           child: Text('Done'),
                         ),
-                        Text('Added by ${(contributor[0] == currentUser?.uid)? 'you' : contributor[1]}'),
+                        Text(
+                            'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}'),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
