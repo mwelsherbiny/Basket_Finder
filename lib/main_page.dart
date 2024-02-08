@@ -52,6 +52,7 @@ class _MapPageState extends State<MapPage> {
   bool? red = true;
   bool? orange = true;
   int requests = 0;
+
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -68,15 +69,11 @@ class _MapPageState extends State<MapPage> {
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
 
-    List<GeoPoint> userPoints = [];
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
 
     void removeLocation() async {
-      userPoints.remove(currentPoint);
-      controller.setStaticPosition(userPoints, 'user');
-      print(userPoints);
       await locationRef.child(currentLocationKey).remove();
       setState(() {
         canShowDetails = false;
@@ -104,10 +101,8 @@ class _MapPageState extends State<MapPage> {
       );
     }
 
-    String _determineMarkerColor(int found, int notFound, String uid) {
-      if (uid == currentUser?.uid) {
-        return 'current';
-      } else if (notFound > 0) {
+    String _determineMarkerColor(int found, int notFound) {
+      if (notFound > 0) {
         return 'red';
       } else if (found >= 3) {
         return 'green';
@@ -224,53 +219,30 @@ class _MapPageState extends State<MapPage> {
     }
 
     void fetchLocations() async {
+      controller.setStaticPosition([], 'green');
+      controller.setStaticPosition([], 'red');
+      controller.setStaticPosition([], 'orange');
       fetchedLocations = true;
-      try {
-        final locationsSnapshot = await locationRef.get();
-        final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
-        locations.forEach((key, value) {
-          final found = value['found'] as int;
-          final notFound = value['not_found'] as int;
-          final updatedMarker =
-              _determineMarkerColor(found, notFound, value['uid']);
-          GeoPoint point = GeoPoint(
-              latitude: value['latitude'], longitude: value['longitude']);
-          switch (updatedMarker) {
-            case 'current':
-              userPoints.add(point);
-              break;
-            case 'green':
-              greenPoints.add(point);
-              break;
-            case 'red':
-              redPoints.add(point);
-              break;
-            case 'orange':
-              orangePoints.add(point);
-              break;
-          }
-        });
-      } catch (e) {
-        print(e);
-        await controller.setStaticPosition([], 'user');
-        await controller.setStaticPosition([], 'green');
-        await controller.setStaticPosition([], 'orange');
-        await controller.setStaticPosition([], 'red');
-        return;
-      }
-      await controller.setStaticPosition(userPoints, 'user');
-      await controller.setMarkerOfStaticPoint(
-          id: 'user',
-          markerIcon: MarkerIcon(
-            iconWidget: Image(
-              image: Image(
-                      image:
-                          AssetImage('assets/Colored_Markers/user_marker.png'))
-                  .image,
-              width: 25,
-            ),
-          ));
-
+      final locationsSnapshot = await locationRef.get();
+      final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
+      locations.forEach((key, value) {
+        final found = value['found'] as int;
+        final notFound = value['not_found'] as int;
+        final updatedMarker = _determineMarkerColor(found, notFound);
+        GeoPoint point = GeoPoint(
+            latitude: value['latitude'], longitude: value['longitude']);
+        switch (updatedMarker) {
+          case 'green':
+            greenPoints.add(point);
+            break;
+          case 'red':
+            redPoints.add(point);
+            break;
+          case 'orange':
+            orangePoints.add(point);
+            break;
+        }
+      });
       await controller.setStaticPosition(greenPoints, 'green');
       await controller.setMarkerOfStaticPoint(
           id: 'green',
@@ -371,20 +343,7 @@ class _MapPageState extends State<MapPage> {
           'exists': false,
         };
         locationRef.push().set(location);
-        userPoints.add(point);
-        controller.setStaticPosition(userPoints, 'user');
-        controller.setMarkerOfStaticPoint(
-          id: 'user',
-          markerIcon: MarkerIcon(
-            iconWidget: Image(
-              image: Image(
-                      image:
-                          AssetImage('assets/Colored_Markers/user_marker.png'))
-                  .image,
-              width: 25,
-            ),
-          ),
-        );
+        controller.addMarker(point);
         await userRef
             .child(currentUser!.uid)
             .update({'locations': locations - 1});
@@ -501,7 +460,6 @@ class _MapPageState extends State<MapPage> {
                   requests = 1;
                 }
                 setState(() {
-                  displayError('refresh', duration: 1);
                   fetchLocations();
                 });
               })
