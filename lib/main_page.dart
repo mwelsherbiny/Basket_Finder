@@ -52,7 +52,7 @@ class _MapPageState extends State<MapPage> {
   bool? red = true;
   bool? orange = true;
   int requests = 0;
-
+  List<GeoPoint> userPoints = [];
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -74,6 +74,7 @@ class _MapPageState extends State<MapPage> {
     List<GeoPoint> orangePoints = [];
 
     void removeLocation() async {
+      controller.removeMarker(currentPoint);
       await locationRef.child(currentLocationKey).remove();
       setState(() {
         canShowDetails = false;
@@ -101,8 +102,12 @@ class _MapPageState extends State<MapPage> {
       );
     }
 
-    String _determineMarkerColor(int found, int notFound) {
-      if (notFound > 0) {
+    String _determineMarkerColor(int found, int notFound, String uid) {
+      if (uid == currentUser?.uid)
+      {
+        return 'user';
+      }
+      else if (notFound > 0) {
         return 'red';
       } else if (found >= 3) {
         return 'green';
@@ -222,16 +227,20 @@ class _MapPageState extends State<MapPage> {
       controller.setStaticPosition([], 'green');
       controller.setStaticPosition([], 'red');
       controller.setStaticPosition([], 'orange');
+      controller.removeMarkers(userPoints);
       fetchedLocations = true;
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
       locations.forEach((key, value) {
         final found = value['found'] as int;
         final notFound = value['not_found'] as int;
-        final updatedMarker = _determineMarkerColor(found, notFound);
+        final updatedMarker = _determineMarkerColor(found, notFound, value['uid']);
         GeoPoint point = GeoPoint(
             latitude: value['latitude'], longitude: value['longitude']);
         switch (updatedMarker) {
+          case 'user':
+            userPoints.add(point);
+            controller.addMarker(point);
           case 'green':
             greenPoints.add(point);
             break;
