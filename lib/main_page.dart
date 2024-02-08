@@ -67,9 +67,20 @@ class _MapPageState extends State<MapPage> {
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
 
+    List<GeoPoint> userPoints = [];
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
+
+    void removeLocation() async
+    {
+      userPoints.remove(currentPoint);
+      controller.setStaticPosition(userPoints, 'user');
+      await locationRef.child(currentLocationKey).remove();
+      setState(() {
+        canShowDetails = false;
+      });
+    }
 
     void applyFilter() {
       (green == false)
@@ -92,8 +103,12 @@ class _MapPageState extends State<MapPage> {
       );
     }
 
-    String _determineMarkerColor(int found, int notFound) {
-      if (notFound > 0) {
+    String _determineMarkerColor(int found, int notFound, String uid) {
+      if (uid == currentUser?.uid)
+      {
+        return 'current';
+      }
+      else if (notFound > 0) {
         return 'red';
       } else if (found >= 3) {
         return 'green';
@@ -222,10 +237,13 @@ class _MapPageState extends State<MapPage> {
         locations.forEach((key, value) {
           final found = value['found'] as int;
           final notFound = value['not_found'] as int;
-          final updatedMarker = _determineMarkerColor(found, notFound);
+          final updatedMarker = _determineMarkerColor(found, notFound, value['uid']);
           GeoPoint point = GeoPoint(
               latitude: value['latitude'], longitude: value['longitude']);
           switch (updatedMarker) {
+            case 'current':
+              userPoints.add(point);
+              break;
             case 'green':
               greenPoints.add(point);
               break;
@@ -244,6 +262,18 @@ class _MapPageState extends State<MapPage> {
         await controller.setStaticPosition([], 'red');
         return;
       }
+      await controller.setStaticPosition(userPoints, 'user');
+      await controller.setMarkerOfStaticPoint(
+          id: 'user',
+          markerIcon: MarkerIcon(
+            iconWidget: Image(
+              image:
+                  Image(image: AssetImage('assets/Colored_Markers/user_marker.png'))
+                      .image,
+              width: 25,
+            ),
+          ));
+
       await controller.setStaticPosition(greenPoints, 'green');
       await controller.setMarkerOfStaticPoint(
           id: 'green',
@@ -545,7 +575,21 @@ class _MapPageState extends State<MapPage> {
                             'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}', 'normal', 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+                          children: (contributor[0] == currentUser?.uid)? [
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              width: 200,
+                              height: 49,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: const Color.fromRGBO(55, 235, 115, 1)),
+                              child: TextButton(
+                                onPressed: removeLocation,
+                                child: StyledText('Remove Location', 'bold', 16),
+                              ),
+                            ),
+                          ]
+                          :[
                             Container(
                               margin: const EdgeInsets.only(top: 8),
                               width: 100,
