@@ -51,6 +51,7 @@ class _MapPageState extends State<MapPage> {
   bool? green = true;
   bool? red = true;
   bool? orange = true;
+  int requests = 0;
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -94,11 +95,11 @@ class _MapPageState extends State<MapPage> {
           : controller.setStaticPosition(orangePoints, 'orange');
     }
 
-    void displayError(String message) {
+    void displayError(String message, {int duration = 5}) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: Duration(seconds: 5),
+          duration: Duration(seconds: duration),
         ),
       );
     }
@@ -490,8 +491,17 @@ class _MapPageState extends State<MapPage> {
               child: SvgPicture.asset(
                 'assets/Colored_Markers/refresh.svg',
               ),
-              onPressed: () {
+              // a waiting time is needed to prevent spam, as it results in bugs and lag
+              onPressed: () async{
+                requests++;
+                print(requests);
+                await Future.delayed(Duration(seconds: requests * 1));
+                if (requests >= 5)
+                {
+                  requests = 1;
+                }
                 setState(() {
+                  displayError('refresh', duration: 1);
                   fetchLocations();
                 });
               })
