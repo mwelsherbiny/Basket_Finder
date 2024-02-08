@@ -44,6 +44,8 @@ dependencies:
   flutter_facebook_auth: ^6.0.4
   firebase_database: ^10.4.2
   intl: ^0.18.1
+  osm_nominatim: ^3.0.0
+  flutter_map_math: ^0.1.7
 
 
 

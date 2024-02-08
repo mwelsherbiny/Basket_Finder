@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
@@ -9,7 +10,10 @@ import 'package:google_solution_challange/main_button.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:google_solution_challange/styled_text.dart';
 import 'package:intl/intl.dart';
+import 'package:osm_nominatim/osm_nominatim.dart';
+import 'package:flutter_map_math/flutter_geo_math.dart';
 
 User? currentUser = FirebaseAuth.instance.currentUser;
 GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
@@ -41,6 +45,8 @@ class _MapPageState extends State<MapPage> {
   bool canShowDetails = false;
   bool canReport = false;
   List<String> contributor = [];
+  String roadName = '';
+  double distance = 0;
   bool showWindow = false;
   bool? green = true;
   bool? red = true;
@@ -65,13 +71,18 @@ class _MapPageState extends State<MapPage> {
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
 
-    void applyFilter()
-    {
-      (green == false)? controller.setStaticPosition([], 'green') : controller.setStaticPosition(greenPoints, 'green');
-      (red == false)? controller.setStaticPosition([], 'red') : controller.setStaticPosition(redPoints, 'red');
-      (orange == false)? controller.setStaticPosition([], 'orange') : controller.setStaticPosition(orangePoints, 'orange');
+    void applyFilter() {
+      (green == false)
+          ? controller.setStaticPosition([], 'green')
+          : controller.setStaticPosition(greenPoints, 'green');
+      (red == false)
+          ? controller.setStaticPosition([], 'red')
+          : controller.setStaticPosition(redPoints, 'red');
+      (orange == false)
+          ? controller.setStaticPosition([], 'orange')
+          : controller.setStaticPosition(orangePoints, 'orange');
     }
-    
+
     void displayError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -154,7 +165,24 @@ class _MapPageState extends State<MapPage> {
     }
 
     void showDetails(GeoPoint point) async {
+      // get road name
       await controller.goToLocation(point);
+      final reverseSearchResult = await Nominatim.reverseSearch(
+        lat: point.latitude,
+        lon: point.longitude,
+        addressDetails: true,
+      );
+      roadName = reverseSearchResult.address?['road'];
+      // get distance between user and location
+      GeoPoint userLocation = await controller.myLocation();
+      distance = FlutterMapMath().distanceBetween(
+        userLocation.latitude,
+        userLocation.longitude, 
+        point.latitude, 
+        point.longitude, 
+        'meters'
+      );
+
       currentPoint = point;
       final locationSnapshot = await locationRef.get();
       final userSnapshot = await userRef.get();
@@ -175,7 +203,6 @@ class _MapPageState extends State<MapPage> {
             }
         },
       );
-      GeoPoint userLocation = await controller.myLocation();
       if ((userLocation.latitude - currentPoint.latitude).abs() <= 0.0001 &&
           (userLocation.longitude - currentPoint.longitude).abs() <= 0.0001) {
         canReport = true;
@@ -189,31 +216,28 @@ class _MapPageState extends State<MapPage> {
 
     void fetchLocations() async {
       fetchedLocations = true;
-      try
-      {
+      try {
         final locationsSnapshot = await locationRef.get();
         final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
         locations.forEach((key, value) {
-        final found = value['found'] as int;
-        final notFound = value['not_found'] as int;
-        final updatedMarker = _determineMarkerColor(found, notFound);
-        GeoPoint point = GeoPoint(
-            latitude: value['latitude'], longitude: value['longitude']);
-        switch (updatedMarker) {
-          case 'green':
-            greenPoints.add(point);
-            break;
-          case 'red':
-            redPoints.add(point);
-            break;
-          case 'orange':
-            orangePoints.add(point);
-            break;
-        }
+          final found = value['found'] as int;
+          final notFound = value['not_found'] as int;
+          final updatedMarker = _determineMarkerColor(found, notFound);
+          GeoPoint point = GeoPoint(
+              latitude: value['latitude'], longitude: value['longitude']);
+          switch (updatedMarker) {
+            case 'green':
+              greenPoints.add(point);
+              break;
+            case 'red':
+              redPoints.add(point);
+              break;
+            case 'orange':
+              orangePoints.add(point);
+              break;
+          }
         });
-      }
-      catch (e)
-      {
+      } catch (e) {
         print(e);
         await controller.setStaticPosition([], 'green');
         await controller.setStaticPosition([], 'orange');
@@ -295,14 +319,13 @@ class _MapPageState extends State<MapPage> {
       final locationKeysSnapshot = await locationRef.get();
       final locationKeys = locationKeysSnapshot.value as Map<dynamic, dynamic>;
       locationKeys.forEach((key, value) {
-        if ((value['latitude'] - point.latitude).abs() <= 0.0001 && (value['longitude'] - point.longitude).abs() <= 0.0001)
-        {
+        if ((value['latitude'] - point.latitude).abs() <= 0.0001 &&
+            (value['longitude'] - point.longitude).abs() <= 0.0001) {
           displayError('Can\'t add multiple locations at the same point');
           locationAlreadyExists = true;
         }
       });
-      if (locationAlreadyExists)
-      {
+      if (locationAlreadyExists) {
         return;
       }
       try {
@@ -363,7 +386,8 @@ class _MapPageState extends State<MapPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CheckboxListTile(
-                            overlayColor: MaterialStatePropertyAll(Color.fromRGBO(44, 186, 91, 1)),
+                            overlayColor: MaterialStatePropertyAll(
+                                Color.fromRGBO(44, 186, 91, 1)),
                             fillColor: MaterialStatePropertyAll(mainColor),
                             title: Text('Likely To Find'),
                             value: green,
@@ -377,7 +401,8 @@ class _MapPageState extends State<MapPage> {
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
                           CheckboxListTile(
-                            overlayColor: MaterialStatePropertyAll(Color.fromARGB(255, 211, 127, 0)),
+                            overlayColor: MaterialStatePropertyAll(
+                                Color.fromARGB(255, 211, 127, 0)),
                             fillColor: MaterialStatePropertyAll(Colors.orange),
                             title: Text('Not Confirmed'),
                             value: orange,
@@ -391,7 +416,8 @@ class _MapPageState extends State<MapPage> {
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
                           CheckboxListTile(
-                            overlayColor: MaterialStatePropertyAll(const Color.fromARGB(255, 154, 40, 32)),
+                            overlayColor: MaterialStatePropertyAll(
+                                const Color.fromARGB(255, 154, 40, 32)),
                             fillColor: MaterialStatePropertyAll(Colors.red),
                             title: Text('Not Likely To Find'),
                             value: red,
@@ -411,13 +437,15 @@ class _MapPageState extends State<MapPage> {
                   }),
                 );
               }),
-              SizedBox(height: 20,),
-              FloatingActionButton(
-                backgroundColor: Colors.white,
-                child: SvgPicture.asset(
-                  'assets/Colored_Markers/refresh.svg',
-                ),
-                onPressed: () {
+          SizedBox(
+            height: 20,
+          ),
+          FloatingActionButton(
+              backgroundColor: Colors.white,
+              child: SvgPicture.asset(
+                'assets/Colored_Markers/refresh.svg',
+              ),
+              onPressed: () {
                 setState(() {
                   fetchLocations();
                 });
@@ -489,36 +517,58 @@ class _MapPageState extends State<MapPage> {
             )
           : (canShowDetails)
               ? Container(
-                  height: 150,
+                  height: 200,
                   child: Center(
-                    child: Column(
+                    child: ListView(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.only(right: 10, left: 10, bottom: 10),
                       children: [
                         TextButton(
+                          
                           onPressed: () {
                             setState(() {
                               canShowDetails = false;
                             });
                           },
-                          child: Text('Done'),
+                          child: StyledText('Done', 'normal', 16),
                         ),
-                        Text(
-                            'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}'),
+                        StyledText(roadName, 'bold', 24),
+                        StyledText('Distance: ${distance.toInt()}m', 'normal', 16),
+                        StyledText(
+                            'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}', 'normal', 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            TextButton(
-                              onPressed: (canReport)
-                                  ? () => reportLocation(true)
-                                  : () => displayError(
-                                      'Please go near the marker to report'),
-                              child: Text('Found'),
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              width: 100,
+                              height: 49,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: const Color.fromRGBO(55, 235, 115, 1)),
+                              child: TextButton(
+                                onPressed: (canReport)
+                                    ? () => reportLocation(true)
+                                    : () => displayError(
+                                        'Please go near the marker to report'),
+                                child: StyledText('Found', 'bold', 16),
+                              ),
                             ),
-                            TextButton(
-                              onPressed: (canReport)
-                                  ? () => reportLocation(false)
-                                  : () => displayError(
-                                      'Please go near the marker to report'),
-                              child: Text('Not Found'),
+                            SizedBox(width: 20,),
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              width: 100,
+                              height: 49,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: const Color.fromRGBO(55, 235, 115, 1)),
+                              child: TextButton(
+                                onPressed: (canReport)
+                                    ? () => reportLocation(false)
+                                    : () => displayError(
+                                        'Please go near the marker to report'),
+                                child: StyledText('Not Found', 'bold', 16),
+                              ),
                             ),
                           ],
                         ),
