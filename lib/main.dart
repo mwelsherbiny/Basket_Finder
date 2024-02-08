@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_solution_challange/main_page.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/sign_up.dart';
+import 'package:google_solution_challange/splash.dart';
 import 'firebase_options.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -32,9 +33,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      routes: {
+        '/':(context) => splash(),
+        '/home':(context) => (signedIn)? MainPage() : SignIn(),
+      },
       title: 'Google Solution Challenge',
       debugShowCheckedModeBanner: false,
-      home: (signedIn)? MainPage() : SignIn(),
+      // home: (signedIn)? MainPage() : SignIn(),
     );
   }
 }

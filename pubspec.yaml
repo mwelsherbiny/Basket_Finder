@@ -45,6 +45,8 @@ dependencies:
   firebase_database: ^10.4.2
   intl: ^0.18.1
   google_fonts: ^6.1.0
+  lottie: ^3.0.0
+
 
 
 
@@ -84,6 +86,7 @@ flutter:
     - assets/main/settings.svg
     - assets/main/location.svg
     - assets/Colored_Markers/
+    - assets/
     - assets/settings_page/
 
   # An image asset can refer to one or more resolution-specific "variants", see

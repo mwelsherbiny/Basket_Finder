@@ -55,6 +55,46 @@ class _MapPageState extends State<MapPage> {
     DatabaseReference locationRef = database.child('location');
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
+    DatabaseReference userId = userRef.child(currentUser!.uid);
+    DatabaseReference userCredibility  = userId.child('credibility'); //added "user" to avoid collisions
+
+    int realtime_credibility = 0;
+    int locations_limit = 5;
+    int calc_location_limit()
+    {
+      if(realtime_credibility == 0)
+      {
+        locations_limit = 0;
+      }
+      else if (realtime_credibility < 3)
+      {
+        switch (realtime_credibility)
+        {
+          case 2:
+            locations_limit -=2;
+            break;
+          case 1:
+            locations_limit -=4;
+            break;
+        }
+      }
+      else if(realtime_credibility > 3)
+      {
+        if(realtime_credibility > 10)
+        {
+          locations_limit = 10;
+        }
+      }
+      return locations_limit;
+    }
+    userCredibility.onValue.listen(
+    (event) {
+      setState(() {
+        realtime_credibility = event.snapshot.value as int;
+        calc_location_limit();
+      });
+    } 
+    );
 
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
@@ -252,10 +292,10 @@ class _MapPageState extends State<MapPage> {
           }
         }
         if (upToDate) {
-          displayError('Can only add 5 locations per day');
+          displayError('Can only add $locations_limit locations per day');
           return;
         } else {
-          locations = 5;
+          locations = locations_limit;
           await userRef
               .child(currentUser!.uid)
               .update({'last_updated': currDateFormatted});
