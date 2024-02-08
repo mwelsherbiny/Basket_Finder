@@ -277,7 +277,7 @@ class _MapPageState extends State<MapPage> {
           }
         }
         if (upToDate) {
-          displayError('Can only add 5 locations per day');
+          displayError('Daily locations limit per day exceeded');
           return;
         } else {
           locations = 5;
@@ -289,8 +289,22 @@ class _MapPageState extends State<MapPage> {
               .update({'locations': locations});
         }
       }
+      bool locationAlreadyExists = false;
       await controller.currentLocation();
       GeoPoint point = await controller.myLocation();
+      final locationKeysSnapshot = await locationRef.get();
+      final locationKeys = locationKeysSnapshot.value as Map<dynamic, dynamic>;
+      locationKeys.forEach((key, value) {
+        if ((value['latitude'] - point.latitude).abs() <= 0.0001 && (value['longitude'] - point.longitude).abs() <= 0.0001)
+        {
+          displayError('Can\'t add multiple locations at the same point');
+          locationAlreadyExists = true;
+        }
+      });
+      if (locationAlreadyExists)
+      {
+        return;
+      }
       try {
         final location = {
           'latitude': point.latitude,
