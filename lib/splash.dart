@@ -18,7 +18,7 @@ void initState() {
 }
 
 startTimer() {
-  var duration = Duration(seconds: 3);
+  var duration = Duration(seconds: 2);
 
   return Timer(duration, route);
 }
@@ -38,7 +38,7 @@ route() {
   Widget content(){
     return Center(
       child: Container(
-        child: Lottie.asset('assets/Basket_Finder_animation.json',
+        child: Lottie.asset('assets/Trashmapmarker.json',
         width: 200,
         ),
       ),

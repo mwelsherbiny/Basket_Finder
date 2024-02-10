@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         '/':(context) => splash(),
         '/home':(context) => (signedIn)? MainPage() : SignIn(),
       },
-      title: 'Google Solution Challenge',
+      title: 'Basket Finder',
       debugShowCheckedModeBanner: false,
       // home: (signedIn)? MainPage() : SignIn(),
     );

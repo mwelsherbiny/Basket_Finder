@@ -1,18 +1,23 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_solution_challange/button.dart';
+import 'package:google_solution_challange/main_button.dart';
 import 'package:google_solution_challange/settings_page.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:google_solution_challange/styled_text.dart';
 import 'package:intl/intl.dart';
+import 'package:osm_nominatim/osm_nominatim.dart';
+import 'package:flutter_map_math/flutter_geo_math.dart';
 
 User? currentUser = FirebaseAuth.instance.currentUser;
 GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
+Color mainColor = Color.fromRGBO(55, 235, 115, 1);
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -39,7 +44,15 @@ class _MapPageState extends State<MapPage> {
   bool fetchedLocations = false;
   bool canShowDetails = false;
   bool canReport = false;
-  String contributor = '';
+  List<String> contributor = [];
+  String roadName = '';
+  double distance = 0;
+  bool showWindow = false;
+  bool? green = true;
+  bool? red = true;
+  bool? orange = true;
+  int requests = 0;
+  bool find_nearest_button_pressed = false;
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -96,21 +109,46 @@ class _MapPageState extends State<MapPage> {
     } 
     );
 
+     List<GeoPoint> userPoints = [];
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
 
-    void displayError(String message) {
+    void removeLocation() async {
+      userPoints.remove(currentPoint);
+      controller.setStaticPosition(userPoints, 'user');
+      print(userPoints);
+      await locationRef.child(currentLocationKey).remove();
+      setState(() {
+        canShowDetails = false;
+      });
+    }
+
+    void applyFilter() {
+      (green == false)
+          ? controller.setStaticPosition([], 'green')
+          : controller.setStaticPosition(greenPoints, 'green');
+      (red == false)
+          ? controller.setStaticPosition([], 'red')
+          : controller.setStaticPosition(redPoints, 'red');
+      (orange == false)
+          ? controller.setStaticPosition([], 'orange')
+          : controller.setStaticPosition(orangePoints, 'orange');
+    }
+
+    void displayError(String message, {int duration = 5}) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: Duration(seconds: 5),
+          duration: Duration(seconds: duration),
         ),
       );
     }
 
-    String _determineMarkerColor(int found, int notFound) {
-      if (notFound > 0) {
+    String _determineMarkerColor(int found, int notFound, String uid) {
+      if (uid == currentUser?.uid) {
+        return 'current';
+      } else if (notFound > 0) {
         return 'red';
       } else if (found >= 3) {
         return 'green';
@@ -152,21 +190,23 @@ class _MapPageState extends State<MapPage> {
       int foundValue = 0;
       if (found) {
         foundValue = currentLocationValue['found'] + 1;
-        if (foundValue == 3)
-        {
+        final userSnapshot = await userRef.child(uid).get();
+        final user = userSnapshot.value as Map<dynamic, dynamic>;
+        final credValue = user['credibility'];
+        if (foundValue == 3) {
           locationRef.child(currentLocationKey).update({'exists': true});
         }
         await locationRef
             .child(currentLocationKey)
             .update({'found': foundValue});
+        await userRef.child(uid).update({'credibility': credValue + 1});
       } else {
         foundValue = currentLocationValue['not_found'] + 1;
         bool exists = currentLocationValue['exists'];
-        if (foundValue == 3)
-        {
-          if (!exists)
-          {
-            final credibilitySnapshot = await userRef.child(uid).child('credibility').get();
+        if (foundValue == 3) {
+          if (!exists) {
+            final credibilitySnapshot =
+                await userRef.child(uid).child('credibility').get();
             int credibility = credibilitySnapshot.value as int;
             await userRef.child(uid).update({'credibility': credibility - 1});
           }
@@ -180,7 +220,19 @@ class _MapPageState extends State<MapPage> {
     }
 
     void showDetails(GeoPoint point) async {
+      // get road name
       await controller.goToLocation(point);
+      final reverseSearchResult = await Nominatim.reverseSearch(
+        lat: point.latitude,
+        lon: point.longitude,
+        addressDetails: true,
+      );
+      roadName = reverseSearchResult.address?['road'];
+      // get distance between user and location
+      GeoPoint userLocation = await controller.myLocation();
+      distance = FlutterMapMath().distanceBetween(userLocation.latitude,
+          userLocation.longitude, point.latitude, point.longitude, 'meters');
+
       currentPoint = point;
       final locationSnapshot = await locationRef.get();
       final userSnapshot = await userRef.get();
@@ -194,14 +246,13 @@ class _MapPageState extends State<MapPage> {
               currentLocationKey = locKey,
               users.forEach((userKey, userValue) {
                 if (locValue['uid'] == userKey) {
-                  contributor = userValue['name'];
+                  contributor = [userKey, userValue['name']];
                   return;
                 }
               })
             }
         },
       );
-      GeoPoint userLocation = await controller.myLocation();
       if ((userLocation.latitude - currentPoint.latitude).abs() <= 0.0001 &&
           (userLocation.longitude - currentPoint.longitude).abs() <= 0.0001) {
         canReport = true;
@@ -212,29 +263,79 @@ class _MapPageState extends State<MapPage> {
         canShowDetails = true;
       });
     }
+// -----------------------------------------------------
+    void findNearestLocation() async{
+      // test cordinates 30.888257346601165, 31.46409141525674 from
+      // 30.889230654393575, 31.46707061264302
+      RoadInfo roadInfo = await controller.drawRoad( 
+      GeoPoint(latitude: 30.888257346601165, longitude: 31.46409141525674),
+      GeoPoint(latitude:  30.889230654393575, longitude: 31.46707061264302),
+      roadType: RoadType.car,
+      intersectPoint : [ GeoPoint(latitude: 30.888257346601165, longitude: 31.46409141525674), GeoPoint(latitude: 30.889230654393575, longitude: 31.46707061264302)],
+      roadOption: RoadOption(
+          roadWidth: 10,
+          roadColor: Colors.blue,
+          zoomInto: true,
+      ),
+    );
+//  print("${roadInfo.distance}km");
+//  print("${roadInfo.duration}sec");
+//  print("${roadInfo.instructions}");
+    }
+
+
+
+// ----------------------------------------------------- find nearest function >>
+
 
     void fetchLocations() async {
       fetchedLocations = true;
-      final locationsSnapshot = await locationRef.get();
-      final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
-      locations.forEach((key, value) {
-        final found = value['found'] as int;
-        final notFound = value['not_found'] as int;
-        final updatedMarker = _determineMarkerColor(found, notFound);
-        GeoPoint point = GeoPoint(
-            latitude: value['latitude'], longitude: value['longitude']);
-        switch (updatedMarker) {
-          case 'green':
-            greenPoints.add(point);
-            break;
-          case 'red':
-            redPoints.add(point);
-            break;
-          case 'orange':
-            orangePoints.add(point);
-            break;
-        }
-      });
+      try {
+        final locationsSnapshot = await locationRef.get();
+        final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
+        locations.forEach((key, value) {
+          final found = value['found'] as int;
+          final notFound = value['not_found'] as int;
+          final updatedMarker =
+              _determineMarkerColor(found, notFound, value['uid']);
+          GeoPoint point = GeoPoint(
+              latitude: value['latitude'], longitude: value['longitude']);
+          switch (updatedMarker) {
+            case 'current':
+              userPoints.add(point);
+              break;
+            case 'green':
+              greenPoints.add(point);
+              break;
+            case 'red':
+              redPoints.add(point);
+              break;
+            case 'orange':
+              orangePoints.add(point);
+              break;
+          }
+        });
+      } catch (e) {
+        print(e);
+        await controller.setStaticPosition([], 'user');
+        await controller.setStaticPosition([], 'green');
+        await controller.setStaticPosition([], 'orange');
+        await controller.setStaticPosition([], 'red');
+        return;
+      }
+      await controller.setStaticPosition(userPoints, 'user');
+      await controller.setMarkerOfStaticPoint(
+          id: 'user',
+          markerIcon: MarkerIcon(
+            iconWidget: Image(
+              image: Image(
+                      image:
+                          AssetImage('assets/Colored_Markers/user_marker.png'))
+                  .image,
+              width: 25,
+            ),
+          ));
+
       await controller.setStaticPosition(greenPoints, 'green');
       await controller.setMarkerOfStaticPoint(
           id: 'green',
@@ -304,8 +405,27 @@ class _MapPageState extends State<MapPage> {
               .update({'locations': locations});
         }
       }
+      bool locationAlreadyExists = false;
       await controller.currentLocation();
       GeoPoint point = await controller.myLocation();
+      try {
+        final locationKeysSnapshot = await locationRef.get();
+        final locationKeys =
+            locationKeysSnapshot.value as Map<dynamic, dynamic>;
+        locationKeys.forEach((key, value) {
+          if ((value['latitude'] - point.latitude).abs() <= 0.0001 &&
+              (value['longitude'] - point.longitude).abs() <= 0.0001) {
+            displayError('Can\'t add multiple locations at the same point');
+            locationAlreadyExists = true;
+          }
+        });
+        if (locationAlreadyExists) {
+          return;
+        }
+      } catch (e) {
+        print(e);
+      }
+
       try {
         final location = {
           'latitude': point.latitude,
@@ -316,7 +436,20 @@ class _MapPageState extends State<MapPage> {
           'exists': false,
         };
         locationRef.push().set(location);
-        controller.addMarker(point);
+        userPoints.add(point);
+        controller.setStaticPosition(userPoints, 'user');
+        controller.setMarkerOfStaticPoint(
+          id: 'user',
+          markerIcon: MarkerIcon(
+            iconWidget: Image(
+              image: Image(
+                      image:
+                          AssetImage('assets/Colored_Markers/user_marker.png'))
+                  .image,
+              width: 25,
+            ),
+          ),
+        );
         await userRef
             .child(currentUser!.uid)
             .update({'locations': locations - 1});
@@ -329,16 +462,115 @@ class _MapPageState extends State<MapPage> {
       fetchLocations();
     }
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            controller.currentLocation();
-          });
-        },
-        backgroundColor: Colors.white,
-        child: SvgPicture.asset(
-          'assets/main/location.svg',
-        ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                controller.currentLocation();
+              });
+            },
+            backgroundColor: Colors.white,
+            child: SvgPicture.asset(
+              'assets/Colored_Markers/target_location.svg',
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          FloatingActionButton(
+              backgroundColor: Colors.white,
+              child: SvgPicture.asset(
+                'assets/Colored_Markers/filter.svg',
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                    return AlertDialog(
+                      backgroundColor: Colors.white,
+                      surfaceTintColor: mainColor,
+                      title: Text('Filter'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(
+                                Color.fromRGBO(44, 186, 91, 1)),
+                            fillColor: MaterialStatePropertyAll(mainColor),
+                            title: Text('Likely To Find'),
+                            value: green,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  green = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(
+                                Color.fromARGB(255, 211, 127, 0)),
+                            fillColor: MaterialStatePropertyAll(Colors.orange),
+                            title: Text('Not Confirmed'),
+                            value: orange,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  orange = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          CheckboxListTile(
+                            overlayColor: MaterialStatePropertyAll(
+                                const Color.fromARGB(255, 154, 40, 32)),
+                            fillColor: MaterialStatePropertyAll(Colors.red),
+                            title: Text('Not Likely To Find'),
+                            value: red,
+                            onChanged: (newBool) {
+                              setState(
+                                () {
+                                  red = newBool;
+                                },
+                              );
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          MainButton('Apply Filter', applyFilter),
+                        ],
+                      ),
+                    );
+                  }),
+                );
+              }),
+          SizedBox(
+            height: 20,
+          ),
+          FloatingActionButton(
+              backgroundColor: Colors.white,
+              child: SvgPicture.asset(
+                'assets/Colored_Markers/refresh.svg',
+              ),
+              // a waiting time is needed to prevent spam, as it results in bugs and lag
+              onPressed: () async{
+                requests++;
+                print(requests);
+                await Future.delayed(Duration(seconds: requests * 1));
+                if (requests >= 5)
+                {
+                  requests = 1;
+                }
+                setState(() {
+                  displayError('refresh', duration: 1);
+                  fetchLocations();
+                });
+              })
+        ],
       ),
       backgroundColor: Colors.white,
       body: OSMFlutter(
@@ -386,28 +618,59 @@ class _MapPageState extends State<MapPage> {
       ),
       bottomNavigationBar: (canAddLocation)
           ? Container(
-              height: 60,
+              padding: EdgeInsets.all(0),
+              height: 92,
               color: Colors.white,
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    canAddLocation = false;
-                    addLocation();
-                  });
-                },
-                child: Column(
-                  children: [
-                    SvgPicture.asset('assets/sign_up/confirm.svg'),
-                    Text('Select Location'),
-                  ],
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        canAddLocation = false;
+                        addLocation();
+                      });
+                    },
+                    child: Container(
+                      width: 72,
+                      child: Column(
+                        children: [
+                          SvgPicture.asset('assets/sign_up/confirm.svg',
+                              width: 48),
+                          StyledText('Confirm', 'normal', 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        canAddLocation = false;
+                      });
+                    },
+                    child: Container(
+                      width: 72,
+                      child: Column(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/Colored_Markers/cancel.svg',
+                            width: 48,
+                          ),
+                          StyledText('Cancel', 'normal', 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           : (canShowDetails)
               ? Container(
-                  height: 150,
+                  height: 200,
                   child: Center(
-                    child: Column(
+                    child: ListView(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.only(right: 10, left: 10, bottom: 10),
                       children: [
                         TextButton(
                           onPressed: () {
@@ -415,27 +678,72 @@ class _MapPageState extends State<MapPage> {
                               canShowDetails = false;
                             });
                           },
-                          child: Text('Done'),
+                          child: StyledText('Done', 'normal', 16),
                         ),
-                        Text('Added by $contributor'),
+                        StyledText(roadName, 'bold', 24),
+                        StyledText(
+                            'Distance: ${distance.toInt()}m', 'normal', 16),
+                        StyledText(
+                            'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}',
+                            'normal',
+                            16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: (canReport)
-                                  ? () => reportLocation(true)
-                                  : () => displayError(
-                                      'Please go near the marker to report'),
-                              child: Text('Found'),
-                            ),
-                            TextButton(
-                              onPressed: (canReport)
-                                  ? () => reportLocation(false)
-                                  : () => displayError(
-                                      'Please go near the marker to report'),
-                              child: Text('Not Found'),
-                            ),
-                          ],
+                          children: (contributor[0] == currentUser?.uid)
+                              ? [
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 8),
+                                    width: 200,
+                                    height: 49,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: const Color.fromRGBO(
+                                            55, 235, 115, 1)),
+                                    child: TextButton(
+                                      onPressed: removeLocation,
+                                      child: StyledText(
+                                          'Remove Location', 'bold', 16),
+                                    ),
+                                  ),
+                                ]
+                              : [
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 8),
+                                    width: 100,
+                                    height: 49,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: const Color.fromRGBO(
+                                            55, 235, 115, 1)),
+                                    child: TextButton(
+                                      onPressed: (canReport)
+                                          ? () => reportLocation(true)
+                                          : () => displayError(
+                                              'Please go near the marker to report'),
+                                      child: StyledText('Found', 'bold', 16),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 20,
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 8),
+                                    width: 100,
+                                    height: 49,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: const Color.fromRGBO(
+                                            55, 235, 115, 1)),
+                                    child: TextButton(
+                                      onPressed: (canReport)
+                                          ? () => reportLocation(false)
+                                          : () => displayError(
+                                              'Please go near the marker to report'),
+                                      child:
+                                          StyledText('Not Found', 'bold', 16),
+                                    ),
+                                  ),
+                                ],
                         ),
                       ],
                     ),
@@ -465,8 +773,33 @@ class _MapPageState extends State<MapPage> {
                         ),
                       );
                     } else if (index == 1) {
-                      
-                      // TODO: find nearest
+                      showModalBottomSheet(context: context, 
+                      builder: (BuildContext context)
+                      {
+                        return SizedBox(
+                          height: 120,
+                          child: Center(
+                            child: ElevatedButton(
+                            onPressed: (){
+                                  setState(() {
+                                  find_nearest_button_pressed = !(find_nearest_button_pressed);
+                                });
+                              findNearestLocation();
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: find_nearest_button_pressed ? Colors.red : Colors.green,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                elevation: 5.0,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Text(find_nearest_button_pressed ? 'Finish' : 'Start')),
+                            ),
+                            
+                          
+                        );
+                      }
+                      );
                     } else if (index == 0) {
                       setState(() {
                         canAddLocation = true;
