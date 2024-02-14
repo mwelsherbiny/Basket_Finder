@@ -15,7 +15,7 @@ List<onboardContent> contents = [
       ),
       onboardContent(
       image: 'assets/onboard/addloc.png',
-      title: 'Adding Locaions',
+      title: 'Adding Locations',
       discription: 'You can help others by marking bins wherever you are.make sure the bin is there before adding.',
       ),
       onboardContent(

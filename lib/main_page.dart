@@ -62,8 +62,8 @@ class _MapPageState extends State<MapPage> {
   bool? orange = true;
   int requests = 0;
   bool find_nearest_button_pressed = false;
-
   List<GeoPoint> userPoints = [];
+
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     areaLimit: BoundingBox(
@@ -75,7 +75,9 @@ class _MapPageState extends State<MapPage> {
   );
 
   Widget build(BuildContext context) {
-    DatabaseReference database = FirebaseDatabase.instance.ref();
+    FirebaseDatabase firebaseDb = FirebaseDatabase.instance;
+    firebaseDb.setPersistenceEnabled(true);
+    DatabaseReference database = firebaseDb.ref();
     DatabaseReference locationRef = database.child('location');
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
@@ -112,7 +114,6 @@ class _MapPageState extends State<MapPage> {
       });
     });
 
-    List<GeoPoint> userPoints = [];
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
@@ -523,6 +524,7 @@ class _MapPageState extends State<MapPage> {
                                 },
                               );
                             },
+                            secondary: Image.asset('assets/Colored_Markers/green.png', width: 25,),
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
                           CheckboxListTile(
@@ -538,6 +540,7 @@ class _MapPageState extends State<MapPage> {
                                 },
                               );
                             },
+                            secondary: Image.asset('assets/Colored_Markers/orange.png', width: 25,),
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
                           CheckboxListTile(
@@ -553,6 +556,7 @@ class _MapPageState extends State<MapPage> {
                                 },
                               );
                             },
+                            secondary: Image.asset('assets/Colored_Markers/red.png', width: 25,),
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
                           MainButton('Apply Filter', applyFilter),

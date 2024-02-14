@@ -74,7 +74,7 @@ class _settingsPageState extends State<settingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: StyledText('Dash Board', 'bold', 30)),
+                  Center(child: StyledText('Dashboard', 'bold', 30)),
                   // User Info Widget-----------------------------------------
                   SizedBox(height: 15),
                   ClipRRect(
