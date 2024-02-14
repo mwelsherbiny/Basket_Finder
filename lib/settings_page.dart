@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -26,19 +27,17 @@ class _settingsPageState extends State<settingsPage> {
     DatabaseReference credibility = userId.child('credibility');
     DatabaseReference locations = userId.child('locations');
 
-    
-    Future<String> getReward() async{
+    Future<String> getReward() async {
       final credibility_snapshot = await credibility.get();
       final credibility_value = credibility_snapshot.value as int;
       if (credibility_value >= 10) {
-        return "Wow! you have 10 locations a day";
+        return "high_cred".tr();
       } else if (credibility_value >= 3) {
-        return "Wait for your big prize";
+        return "okay_cred".tr();
       } else {
-        return "Be careful you Credibility is too low";
+        return "low_cred".tr();
       }
     }
-
 
     void showRules() {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Rules()));
@@ -65,7 +64,7 @@ class _settingsPageState extends State<settingsPage> {
               centerTitle: true,
               backgroundColor: Colors.white,
               title: Text(
-                'Settings',
+                'settings'.tr(),
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -74,7 +73,7 @@ class _settingsPageState extends State<settingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: StyledText('Dashboard', 'bold', 30)),
+                  Center(child: StyledText('dashboard'.tr(), 'bold', 30)),
                   // User Info Widget-----------------------------------------
                   SizedBox(height: 15),
                   ClipRRect(
@@ -102,17 +101,19 @@ class _settingsPageState extends State<settingsPage> {
                                     height: 50,
                                     child: Center(
                                       child: StreamBuilder<String>(
-                                        stream: credibility.onValue.map((event) =>
-                                            event.snapshot.value.toString()),
+                                        stream: credibility.onValue.map(
+                                            (event) => event.snapshot.value
+                                                .toString()),
                                         builder: (context, snapshot) {
                                           if (snapshot.hasError) {
                                             return Text(
                                                 'Error: ${snapshot.error}');
                                           }
-                                      
+
                                           switch (snapshot.connectionState) {
                                             case ConnectionState.waiting:
-                                              return Lottie.asset('assets/load_animation.json');
+                                              return Lottie.asset(
+                                                  'assets/load_animation.json');
                                             default:
                                               return Text(
                                                 snapshot.data!,
@@ -126,7 +127,7 @@ class _settingsPageState extends State<settingsPage> {
                                       ),
                                     ),
                                   ),
-                                  StyledText('My credibility', 'normal', 12)
+                                  StyledText('credibility'.tr(), 'normal', 12)
                                 ],
                               ),
                             ),
@@ -155,22 +156,23 @@ class _settingsPageState extends State<settingsPage> {
                                           height: 50,
                                           child: Center(
                                             child: Text(snapshot.data!,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            textAlign: TextAlign.center
-                                            ),
-                                          ), 
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                textAlign: TextAlign.center),
+                                          ),
                                         );
                                       } else if (snapshot.hasError) {
                                         return Text('Error: ${snapshot.error}');
                                       } else {
-                                        return Lottie.asset('assets/load_animation.json',width: 50);
+                                        return Lottie.asset(
+                                            'assets/load_animation.json',
+                                            width: 50);
                                       }
                                     },
                                   ),
-                                  StyledText('Rewards', 'normal', 12),
+                                  StyledText('rewards'.tr(), 'normal', 12),
                                 ],
                               ),
                             ),
@@ -202,13 +204,14 @@ class _settingsPageState extends State<settingsPage> {
                                             return Text(
                                                 'Error: ${snapshot.error}');
                                           }
-                                      
+
                                           switch (snapshot.connectionState) {
                                             case ConnectionState.waiting:
-                                              return Lottie.asset('assets/load_animation.json');
+                                              return Lottie.asset(
+                                                  'assets/load_animation.json');
                                             default:
                                               return Text(
-                                                snapshot.data!, 
+                                                snapshot.data!,
                                                 style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold,
@@ -219,7 +222,7 @@ class _settingsPageState extends State<settingsPage> {
                                       ),
                                     ),
                                   ),
-                                  StyledText('Locations', 'normal', 12)
+                                  StyledText('locations'.tr(), 'normal', 12)
                                 ],
                               ),
                             ),
@@ -233,12 +236,12 @@ class _settingsPageState extends State<settingsPage> {
                     height: 20,
                   ),
                   SizedBox(height: 25),
-                  StyledText('Username', 'bold', 20),
+                  StyledText('username'.tr(), 'bold', 20),
                   StyledText(currentUser!.displayName!, 'normal', 16),
                   SizedBox(
                     height: 20,
                   ),
-                  StyledText('Email', 'bold', 20),
+                  StyledText('email'.tr(), 'bold', 20),
                   StyledText(currentUser!.email!, 'normal', 16),
                   SizedBox(
                     height: 20,
@@ -251,10 +254,42 @@ class _settingsPageState extends State<settingsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        StyledText('Platform Rules', 'bold', 20),
-                        StyledText('Help keep the app accurate', 'normal', 16),
+                        StyledText('platform_rules'.tr(), 'bold', 20),
+                        StyledText('rules_description'.tr(), 'normal', 16),
                       ],
                     ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  StyledText('language'.tr(), 'bold', 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.all(0),
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            context.setLocale(Locale('en', 'US'));
+                          });
+                        },
+                        child: StyledText('english'.tr(), 'bold', 20),
+                      ),
+                      SizedBox(width: 15,),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.all(0),
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            context.setLocale(Locale('ar', 'EG'));
+                          });
+                        },
+                        child: StyledText('arabic'.tr(), 'bold', 20),
+                      ),
+                    ],
                   ),
                   SizedBox(
                     height: 20,
@@ -264,7 +299,7 @@ class _settingsPageState extends State<settingsPage> {
                         padding: EdgeInsets.all(0),
                       ),
                       onPressed: signOut,
-                      child: StyledText('Sign Out', 'bold', 20)),
+                      child: StyledText('sign_out'.tr(), 'bold', 20)),
                 ],
               ),
             )

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/sign_in.dart';
@@ -18,13 +19,13 @@ class SignUp extends StatelessWidget {
           padding: const EdgeInsets.all(25),
           children: [
             const SizedBox(height: 100),
-            Center(child: StyledText('Sign Up', 'bold', 28)),
+            Center(child: StyledText('sign_up'.tr(), 'bold', 28)),
             const SizedBox(height: 50),
-            Input('Username', 'username.svg'),
-            Input('Email', 'email.svg'),
-            Input('Password', 'password.svg', hideText: true),
-            Input('Confirm Password', 'confirm.svg', hideText: true),
-            Button('Sign Up'),
+            Input('username', 'username.svg'),
+            Input('email', 'email.svg'),
+            Input('password', 'password.svg', hideText: true),
+            Input('confirm_password', 'confirm.svg', hideText: true),
+            Button('sign_up'.tr()),
             Container(
               margin: const EdgeInsets.only(top: 10, bottom: 20),
               child: Center(
@@ -36,7 +37,7 @@ class SignUp extends StatelessWidget {
                       height: 1,
                       color: const Color.fromRGBO(44, 44, 44, 1),
                     ),
-                    StyledText(' Or ', 'normal', 16),
+                    StyledText('or'.tr(), 'normal', 16),
                     Container(
                       color: const Color.fromRGBO(44, 44, 44, 1),
                       width: 140,
@@ -53,7 +54,7 @@ class SignUp extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                StyledText('Don’t have an account?', 'normal', 12),
+                StyledText('have_account'.tr(), 'normal', 12),
                 TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -61,7 +62,7 @@ class SignUp extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (context) => const SignIn()));
                     },
-                    child: StyledText('Sign In', 'normal', 12,
+                    child: StyledText('sign_in'.tr(), 'normal', 12,
                         textColor: const Color.fromRGBO(55, 235, 115, 1)))
               ],
             ),

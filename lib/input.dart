@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/sign_in.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 
 class Input extends StatelessWidget {
   Input(this.promptType, this.iconFile, {this.hideText = false, super.key});
@@ -37,19 +37,19 @@ class Input extends StatelessWidget {
                     controller: () {
                       switch(promptType)
                       {
-                        case 'Email':
+                        case 'email':
                           return emailController;
-                        case 'Password':
+                        case 'password':
                           return passwordController;
-                        case 'Username':
+                        case 'username':
                           return usernameController;
-                        case 'Confirm Password':
+                        case 'confirm_password':
                           return confirmPasswordController;
                       }
                     }(),
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      hintText: promptType,
+                      hintText: promptType.tr(),
                     ),
                   ),
                 ),

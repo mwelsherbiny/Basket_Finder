@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/styled_text.dart';
@@ -11,49 +12,49 @@ class Rules extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'Rules',
+          'rules'.tr(),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
         padding: EdgeInsets.all(15),
         children: [
-          StyledText('Contribution Limits', 'bold', 18),
+          StyledText('rule1_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022You can only add up to 5 new bin locations per day. This ensures high quality contributions.'),
+              'rule1'.tr()),
           SizedBox(
             height: 20,
           ),
-          StyledText('Location Accuracy', 'bold', 18),
+          StyledText('rule2_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022Only add bins you can currently see in person. Do not speculate on distant/unknown locations.'),
+              'rule2_pt1'.tr()),
           SizedBox(height: 10,),
           RuleDescription(
-              '\u2022Make sure to provide an accurate address or directions. Locations must be verifiable.'),
+              'rule2_pt2'.tr()),
           SizedBox(
             height: 20,
           ),
-          StyledText('Location Reporting', 'bold', 18),
+          StyledText('rule3_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022Help the community by reporting on locations added by others. Your reports determine validity.'),
+              'rule3'.tr()),
           SizedBox(
             height: 20,
           ),
-          StyledText('Invalid Location Detection', 'bold', 18),
+          StyledText('rule4_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022If a location receives 3 "not found" reports, it will be removed from the map.'),
+              'rule4'.tr()),
           SizedBox(
             height: 20,
           ),
-          StyledText('User Credibility', 'bold', 18),
+          StyledText('rule5_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022The user who added an invalidated location loses credibility, except if it previously had 3 "found" reports indicating it was legitimate at some point.'),
+              'rule5'.tr()),
           SizedBox(
             height: 20,
           ),
-          StyledText('Report Proximity', 'bold', 18),
+          StyledText('rule6_head'.tr(), 'bold', 18),
           RuleDescription(
-              '\u2022You can only submit location reports for bins near your current reported location for accuracy.'),
+              'rule6'.tr()),
           SizedBox(
             height: 20,
           ),

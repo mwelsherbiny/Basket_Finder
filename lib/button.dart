@@ -7,6 +7,7 @@ import 'package:google_solution_challange/input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class Button extends StatelessWidget {
   String text;
@@ -28,6 +29,8 @@ class Button extends StatelessWidget {
     void signIn() async {
       String email = Input.emailController.text;
       String password = Input.passwordController.text;
+      print(email);
+      print(password);
       try {
         final credential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(email: email, password: password);
@@ -121,7 +124,7 @@ class Button extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           color: const Color.fromRGBO(55, 235, 115, 1)),
       child: TextButton(
-        onPressed: (text == 'Sign In') ? signIn : signUp,
+        onPressed: (text == 'sign_in'.tr()) ? signIn : signUp,
         child: StyledText(text, 'bold', 16),
       ),
     );

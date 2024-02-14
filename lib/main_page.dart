@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -507,7 +508,7 @@ class _MapPageState extends State<MapPage> {
                     return AlertDialog(
                       backgroundColor: Colors.white,
                       surfaceTintColor: mainColor,
-                      title: Text('Filter'),
+                      title: Text('filter'.tr()),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -515,7 +516,7 @@ class _MapPageState extends State<MapPage> {
                             overlayColor: MaterialStatePropertyAll(
                                 Color.fromRGBO(44, 186, 91, 1)),
                             fillColor: MaterialStatePropertyAll(mainColor),
-                            title: Text('Likely To Find'),
+                            title: Text('likely'.tr()),
                             value: green,
                             onChanged: (newBool) {
                               setState(
@@ -531,7 +532,7 @@ class _MapPageState extends State<MapPage> {
                             overlayColor: MaterialStatePropertyAll(
                                 Color.fromARGB(255, 211, 127, 0)),
                             fillColor: MaterialStatePropertyAll(Colors.orange),
-                            title: Text('Not Confirmed'),
+                            title: Text('not_confirmed'.tr()),
                             value: orange,
                             onChanged: (newBool) {
                               setState(
@@ -547,7 +548,7 @@ class _MapPageState extends State<MapPage> {
                             overlayColor: MaterialStatePropertyAll(
                                 const Color.fromARGB(255, 154, 40, 32)),
                             fillColor: MaterialStatePropertyAll(Colors.red),
-                            title: Text('Not Likely To Find'),
+                            title: Text('unlikely'.tr()),
                             value: red,
                             onChanged: (newBool) {
                               setState(
@@ -559,7 +560,7 @@ class _MapPageState extends State<MapPage> {
                             secondary: Image.asset('assets/Colored_Markers/red.png', width: 25,),
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
-                          MainButton('Apply Filter', applyFilter),
+                          MainButton('apply_filter'.tr(), applyFilter),
                         ],
                       ),
                     );
@@ -653,7 +654,7 @@ class _MapPageState extends State<MapPage> {
                         children: [
                           SvgPicture.asset('assets/sign_up/confirm.svg',
                               width: 48),
-                          StyledText('Confirm', 'normal', 16),
+                          StyledText('confirm'.tr(), 'normal', 16),
                         ],
                       ),
                     ),
@@ -672,7 +673,7 @@ class _MapPageState extends State<MapPage> {
                             'assets/Colored_Markers/cancel.svg',
                             width: 48,
                           ),
-                          StyledText('Cancel', 'normal', 16),
+                          StyledText('cancel'.tr(), 'normal', 16),
                         ],
                       ),
                     ),
@@ -768,15 +769,15 @@ class _MapPageState extends State<MapPage> {
               : BottomNavigationBar(
                   items: [
                     BottomNavigationBarItem(
-                      label: 'Add Location',
+                      label: 'add_location'.tr(),
                       icon: SvgPicture.asset('assets/main/add_location.svg'),
                     ),
                     BottomNavigationBarItem(
-                      label: 'Find Nearest',
+                      label: 'find_nearest'.tr(),
                       icon: SvgPicture.asset('assets/main/find_nearest.svg'),
                     ),
                     BottomNavigationBarItem(
-                      label: 'Settings',
+                      label: 'settings'.tr(),
                       icon: SvgPicture.asset('assets/main/settings.svg'),
                     ),
                   ],
@@ -845,8 +846,8 @@ class _MapPageState extends State<MapPage> {
                                       ),
                                       child: Text(
                                         find_nearest_button_pressed
-                                            ? 'Finish'
-                                            : 'Start',
+                                            ? 'finish'.tr()
+                                            : 'start'.tr(),
                                         style: TextStyle(
                                           fontSize: 19,
                                         ),

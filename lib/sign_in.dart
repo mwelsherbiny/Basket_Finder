@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/sign_up.dart';
@@ -23,15 +24,15 @@ class SignIn extends StatelessWidget {
             padding: const EdgeInsets.all(25),
             children: [
               const SizedBox(height: 100),
-              Center(child: StyledText('Sign In', 'bold', 28)),
+              Center(child: StyledText('sign_in'.tr(), 'bold', 28)),
               const SizedBox(height: 50),
-              Input('Email', 'email.svg'),
+              Input('email', 'email.svg'),
               Input(
-                'Password',
+                'password',
                 'password.svg',
                 hideText: true,
               ),
-              Button('Sign In'),
+              Button('sign_in'.tr()),
               Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
                 child: Row(
@@ -42,7 +43,7 @@ class SignIn extends StatelessWidget {
                       height: 1,
                       color: const Color.fromRGBO(44, 44, 44, 1),
                     ),
-                    StyledText(' Or ', 'normal', 16),
+                    StyledText('or'.tr(), 'normal', 16),
                     Container(
                       color: const Color.fromRGBO(44, 44, 44, 1),
                       width: 140,
@@ -58,13 +59,13 @@ class SignIn extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  StyledText('Don’t have an account?', 'normal', 12),
+                  StyledText('no_account'.tr(), 'normal', 12),
                   TextButton(
                       onPressed: () {
                         Navigator.push(context,
                             MaterialPageRoute(builder: (context) => SignUp()));
                       },
-                      child: StyledText('Create new one', 'normal', 12,
+                      child: StyledText('create_account'.tr(), 'normal', 12,
                           textColor: const Color.fromRGBO(55, 235, 115, 1)))
                 ],
               ),

@@ -50,6 +50,7 @@ dependencies:
   flutter_native_splash: ^2.3.10
   geolocator: ^10.1.0
   shared_preferences: ^2.2.2
+  easy_localization: ^3.0.4
 
 
 flutter_icons:
@@ -99,6 +100,7 @@ flutter:
     - assets/
     - assets/onboard/
     - assets/settings_page/
+    - assets/translations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
