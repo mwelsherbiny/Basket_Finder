@@ -12,8 +12,17 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:osm_nominatim/osm_nominatim.dart';
 import 'package:flutter_map_math/flutter_geo_math.dart';
+import 'package:geolocator/geolocator.dart';
+
+class PositionData {
+  final double latitude;
+  final double longitude;
+
+  PositionData(this.latitude, this.longitude); // for find nearest feature >>
+}
 
 User? currentUser = FirebaseAuth.instance.currentUser;
 GeoPoint currentPoint = GeoPoint(latitude: 0, longitude: 0);
@@ -52,6 +61,8 @@ class _MapPageState extends State<MapPage> {
   bool? red = true;
   bool? orange = true;
   int requests = 0;
+  bool find_nearest_button_pressed = false;
+
   List<GeoPoint> userPoints = [];
   MapController controller = MapController(
     initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
@@ -68,7 +79,40 @@ class _MapPageState extends State<MapPage> {
     DatabaseReference locationRef = database.child('location');
     DatabaseReference userRef = database.child('user');
     DatabaseReference reportRef = database.child('report');
+    DatabaseReference userId = userRef.child(currentUser!.uid);
+    DatabaseReference userCredibility =
+        userId.child('credibility'); //added "user" to avoid collisions
 
+    int realtime_credibility = 0;
+    int locations_limit = 5;
+    int calc_location_limit() {
+      if (realtime_credibility == 0) {
+        locations_limit = 0;
+      } else if (realtime_credibility < 3) {
+        switch (realtime_credibility) {
+          case 2:
+            locations_limit -= 2;
+            break;
+          case 1:
+            locations_limit -= 4;
+            break;
+        }
+      } else if (realtime_credibility > 3) {
+        if (realtime_credibility > 10) {
+          locations_limit = 10;
+        }
+      }
+      return locations_limit;
+    }
+
+    userCredibility.onValue.listen((event) {
+      setState(() {
+        realtime_credibility = event.snapshot.value as int;
+        calc_location_limit();
+      });
+    });
+
+    List<GeoPoint> userPoints = [];
     List<GeoPoint> greenPoints = [];
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
@@ -103,11 +147,9 @@ class _MapPageState extends State<MapPage> {
     }
 
     String _determineMarkerColor(int found, int notFound, String uid) {
-      if (uid == currentUser?.uid)
-      {
+      if (uid == currentUser?.uid) {
         return 'user';
-      }
-      else if (notFound > 0) {
+      } else if (notFound > 0) {
         return 'red';
       } else if (found >= 3) {
         return 'green';
@@ -223,6 +265,74 @@ class _MapPageState extends State<MapPage> {
       });
     }
 
+// --------------------------------------------------------------------------------------------
+    void removeRoads() async {
+      await controller.clearAllRoads();
+    }
+
+    PositionData minDistanceCalc(
+      Position currentPosition,
+      List<PositionData> positions,
+    ) {
+      double minDistance = double.infinity;
+      PositionData nearestPosition = PositionData(0, 0);
+
+      for (PositionData otherPosition in positions) {
+        final distance = Geolocator.distanceBetween(
+          currentPosition.latitude,
+          currentPosition.longitude,
+          otherPosition.latitude,
+          otherPosition.longitude,
+        );
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestPosition = otherPosition;
+        }
+      }
+      return nearestPosition;
+    }
+
+    void findNearestLocation() async {
+      List<PositionData> basketsLocations = [];
+      final locationsSnapshot = await locationRef.get();
+      final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
+      locations.forEach((key, value) {
+        PositionData targetBasket =
+            PositionData(value['latitude'], value['longitude']);
+        basketsLocations.add(targetBasket);
+      });
+      Position currentPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double currentLatitude = currentPosition.latitude;
+      double currentLongitude = currentPosition.longitude;
+      PositionData nearestBasket =
+          minDistanceCalc(currentPosition, basketsLocations);
+
+      RoadInfo roadInfo = await controller.drawRoad(
+        GeoPoint(latitude: currentLatitude, longitude: currentLongitude),
+        GeoPoint(
+            latitude: nearestBasket.latitude,
+            longitude: nearestBasket.longitude),
+        roadType: RoadType.car,
+        intersectPoint: [
+          GeoPoint(latitude: currentLatitude, longitude: currentLongitude),
+          GeoPoint(
+              latitude: nearestBasket.latitude,
+              longitude: nearestBasket.longitude)
+        ],
+        roadOption: RoadOption(
+          roadWidth: 10,
+          roadColor: Color.fromARGB(255, 57, 224, 42),
+          zoomInto: true,
+        ),
+      );
+//  print("${roadInfo.distance}km");
+//  print("${roadInfo.duration}sec");
+//  print("${roadInfo.instructions}");
+    }
+// ----------------------------------------------------- find nearest function >>
+
     void fetchLocations() async {
       controller.setStaticPosition([], 'green');
       controller.setStaticPosition([], 'red');
@@ -234,7 +344,8 @@ class _MapPageState extends State<MapPage> {
       locations.forEach((key, value) {
         final found = value['found'] as int;
         final notFound = value['not_found'] as int;
-        final updatedMarker = _determineMarkerColor(found, notFound, value['uid']);
+        final updatedMarker =
+            _determineMarkerColor(found, notFound, value['uid']);
         GeoPoint point = GeoPoint(
             latitude: value['latitude'], longitude: value['longitude']);
         switch (updatedMarker) {
@@ -309,10 +420,10 @@ class _MapPageState extends State<MapPage> {
           }
         }
         if (upToDate) {
-          displayError('Daily locations limit per day exceeded');
+          displayError('Can only add $locations_limit locations per day');
           return;
         } else {
-          locations = 5;
+          locations = locations_limit;
           await userRef
               .child(currentUser!.uid)
               .update({'last_updated': currDateFormatted});
@@ -460,12 +571,11 @@ class _MapPageState extends State<MapPage> {
                 'assets/Colored_Markers/refresh.svg',
               ),
               // a waiting time is needed to prevent spam, as it results in bugs and lag
-              onPressed: () async{
+              onPressed: () async {
                 requests++;
                 print(requests);
                 await Future.delayed(Duration(seconds: requests * 1));
-                if (requests >= 5)
-                {
+                if (requests >= 5) {
                   requests = 1;
                 }
                 setState(() {
@@ -675,7 +785,72 @@ class _MapPageState extends State<MapPage> {
                         ),
                       );
                     } else if (index == 1) {
-                      // TODO: find nearest
+                      showModalBottomSheet(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SizedBox(
+                              height: 120,
+                              child: Row(children: [
+                               SizedBox(
+                                  width: 16,
+                                ),
+                                 SizedBox(
+                                  child: Center(
+                                      child: Text(
+                                    'Find\nNearest\nBasket',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      height: 1,
+                                      fontWeight: FontWeight.bold,
+                                      color:  Color.fromRGBO(71, 71, 71, 1)
+                                    ),
+                                    textAlign: TextAlign.center
+                                  )),
+                                  width: 100,
+                                  height: 100,
+                                ),
+                                Lottie.asset('assets/drawroad.json',
+                                    width: 100),
+                                SizedBox(width: 30,),
+                                SizedBox(
+                                  height: 50,
+                                  width: 100,
+                                  child: ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          find_nearest_button_pressed =
+                                              !(find_nearest_button_pressed);
+                                        });
+                                        if (find_nearest_button_pressed) {
+                                          findNearestLocation();
+                                        } else {
+                                          removeRoads();
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            find_nearest_button_pressed
+                                                ? Colors.red
+                                                : Colors.green,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0)),
+                                        elevation: 0.0,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      child: Text(
+                                        find_nearest_button_pressed
+                                            ? 'Finish'
+                                            : 'Start',
+                                        style: TextStyle(
+                                          fontSize: 19,
+                                        ),
+                                      )),
+                                ),
+                              ]),
+                            );
+                          });
                     } else if (index == 0) {
                       setState(() {
                         canAddLocation = true;

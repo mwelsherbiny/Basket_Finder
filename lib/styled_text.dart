@@ -12,7 +12,7 @@ class StyledText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(
+      style:  TextStyle(
         fontSize: size,
         fontWeight: (weight == 'normal') ? FontWeight.w400 : FontWeight.w700,
         color: textColor,
