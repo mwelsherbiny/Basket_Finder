@@ -695,13 +695,13 @@ class _MapPageState extends State<MapPage> {
                               canShowDetails = false;
                             });
                           },
-                          child: StyledText('Done', 'normal', 16),
+                          child: StyledText('done'.tr(), 'normal', 16),
                         ),
                         StyledText(roadName, 'bold', 24),
                         StyledText(
-                            'Distance: ${distance.toInt()}m', 'normal', 16),
+                            '${'distance'.tr()}: ${distance.toInt()}${'m'.tr()}', 'normal', 16),
                         StyledText(
-                            'Added by ${(contributor[0] == currentUser?.uid) ? 'you' : contributor[1]}',
+                            '${(contributor[0] == currentUser?.uid) ? 'added_by_you'.tr() : 'added_by'.tr() + contributor[1]}',
                             'normal',
                             16),
                         Row(
@@ -719,14 +719,13 @@ class _MapPageState extends State<MapPage> {
                                     child: TextButton(
                                       onPressed: removeLocation,
                                       child: StyledText(
-                                          'Remove Location', 'bold', 16),
+                                          'remove_location'.tr(), 'bold', 16),
                                     ),
                                   ),
                                 ]
                               : [
                                   Container(
                                     margin: const EdgeInsets.only(top: 8),
-                                    width: 100,
                                     height: 49,
                                     decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(10),
@@ -737,7 +736,7 @@ class _MapPageState extends State<MapPage> {
                                           ? () => reportLocation(true)
                                           : () => displayError(
                                               'Please go near the marker to report'),
-                                      child: StyledText('Found', 'bold', 16),
+                                      child: StyledText('found'.tr(), 'bold', 16),
                                     ),
                                   ),
                                   SizedBox(
@@ -745,7 +744,6 @@ class _MapPageState extends State<MapPage> {
                                   ),
                                   Container(
                                     margin: const EdgeInsets.only(top: 8),
-                                    width: 100,
                                     height: 49,
                                     decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(10),
@@ -757,7 +755,7 @@ class _MapPageState extends State<MapPage> {
                                           : () => displayError(
                                               'Please go near the marker to report'),
                                       child:
-                                          StyledText('Not Found', 'bold', 16),
+                                          StyledText('not_found'.tr(), 'bold', 16),
                                     ),
                                   ),
                                 ],

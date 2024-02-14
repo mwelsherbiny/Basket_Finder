@@ -47,5 +47,13 @@
     "cancel": "Cancel",
     "language": "Language",
     "arabic": "Arabic",
-    "english": "English"
+    "english": "English",
+    "found": "Found",
+    "not_found": "Not Found",
+    "done": "Done",
+    "distance": "Distance",
+    "m": "m",
+    "added_by": "Added by ",
+    "added_by_you": "Added by you",
+    "remove_location": "Remove Location"
 }
