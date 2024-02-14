@@ -9,6 +9,9 @@ import 'package:google_solution_challange/rules_page.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+String? language;
 
 class settingsPage extends StatefulWidget {
   const settingsPage({super.key});
@@ -271,7 +274,9 @@ class _settingsPageState extends State<settingsPage> {
                           padding: EdgeInsets.all(0),
                         ),
                         onPressed: () async {
+                          SharedPreferences prefs = await SharedPreferences.getInstance(); 
                           setState(() {
+                            prefs.setString('language', 'en');
                             context.setLocale(Locale('en', 'US'));
                           });
                         },
@@ -283,6 +288,8 @@ class _settingsPageState extends State<settingsPage> {
                           padding: EdgeInsets.all(0),
                         ),
                         onPressed: () async {
+                          SharedPreferences prefs = await SharedPreferences.getInstance(); 
+                          prefs.setString('language', 'ar');
                           setState(() {
                             context.setLocale(Locale('ar', 'EG'));
                           });

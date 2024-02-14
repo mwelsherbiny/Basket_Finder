@@ -17,6 +17,7 @@ import 'package:lottie/lottie.dart';
 import 'package:osm_nominatim/osm_nominatim.dart';
 import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PositionData {
   final double latitude;
@@ -119,6 +120,20 @@ class _MapPageState extends State<MapPage> {
     List<GeoPoint> redPoints = [];
     List<GeoPoint> orangePoints = [];
 
+    void applyLanguage() async
+    {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? language = prefs.getString('language');
+      switch(language)
+      {
+        case 'en':
+        context.setLocale(Locale('en', 'US'));
+        break;
+        case 'ar':
+        context.setLocale(Locale('ar', 'EG'));
+        break;
+      }
+    }
     void removeLocation() async {
       controller.removeMarker(currentPoint);
       await locationRef.child(currentLocationKey).remove();
@@ -474,6 +489,7 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
+    applyLanguage();
     if (!fetchedLocations) {
       fetchLocations();
     }
