@@ -7,6 +7,7 @@ import 'package:google_solution_challange/input.dart';
 import 'package:google_solution_challange/rules_page.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
+import 'package:lottie/lottie.dart';
 
 class settingsPage extends StatefulWidget {
   const settingsPage({super.key});
@@ -25,19 +26,19 @@ class _settingsPageState extends State<settingsPage> {
     DatabaseReference credibility = userId.child('credibility');
     DatabaseReference locations = userId.child('locations');
 
-      // int credibility_snapshot = credibility.get() as int
     
-    String reward_text;
+    Future<String> getReward() async{
+      final credibility_snapshot = await credibility.get();
+      final credibility_value = credibility_snapshot.value as int;
+      if (credibility_value >= 10) {
+        return "Wow! you have 10 locations a day";
+      } else if (credibility_value >= 3) {
+        return "Wait for your big prize";
+      } else {
+        return "Be careful you Credibility is too low";
+      }
+    }
 
-
-
-  // if (credibility >= 10) {
-  //   return StyledText("Wow! you have 10 locations a day", 'bold', 10);
-  // } else if (credibility >= 3) {
-  //   return StyledText("Wait for your big prize", 'bold', 10);
-  // } else {
-  //   return StyledText("Be careful you Credibility\nis too low", 'bold', 10);
-  // }
 
     void showRules() {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Rules()));
@@ -79,7 +80,7 @@ class _settingsPageState extends State<settingsPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(15),
                     child: Container(
-                      height: 95,
+                      height: 115,
                       width: 400,
                       color: Color.fromARGB(255, 222, 222, 222),
                       child: Row(
@@ -98,39 +99,31 @@ class _settingsPageState extends State<settingsPage> {
                                     width: 30,
                                   ),
                                   Container(
-                                    height: 30,
-                                    child: StreamBuilder<String>(
-                                      stream: credibility.onValue.map((event) =>
-                                          event.snapshot.value.toString()),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasError) {
-                                          return Text(
-                                              'Error: ${snapshot.error}');
-                                        }
-
-                                        switch (snapshot.connectionState) {
-                                          case ConnectionState.waiting:
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.all(12.0),
-                                              child: Container(
-                                                height: 3,
-                                                child: LinearProgressIndicator(
-                                                  color: Color.fromARGB(
-                                                      255, 137, 137, 137),
-                                                ),
-                                              ),
-                                            );
-                                          default:
+                                    height: 50,
+                                    child: Center(
+                                      child: StreamBuilder<String>(
+                                        stream: credibility.onValue.map((event) =>
+                                            event.snapshot.value.toString()),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasError) {
                                             return Text(
-                                              snapshot.data!,
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            );
-                                        }
-                                      },
+                                                'Error: ${snapshot.error}');
+                                          }
+                                      
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.waiting:
+                                              return Lottie.asset('assets/load_animation.json');
+                                            default:
+                                              return Text(
+                                                snapshot.data!,
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
                                   StyledText('My credibility', 'normal', 12)
@@ -154,10 +147,29 @@ class _settingsPageState extends State<settingsPage> {
                                     'assets/settings_page/reward.svg',
                                     width: 29,
                                   ),
-                                  Container(
-                                    height: 30,
-                                    child:StyledText('Rewards', 'normal', 12),
-                                    ),
+                                  FutureBuilder<String>(
+                                    future: getReward(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return Container(
+                                          height: 50,
+                                          child: Center(
+                                            child: Text(snapshot.data!,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            textAlign: TextAlign.center
+                                            ),
+                                          ), 
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return Text('Error: ${snapshot.error}');
+                                      } else {
+                                        return Lottie.asset('assets/load_animation.json',width: 50);
+                                      }
+                                    },
+                                  ),
                                   StyledText('Rewards', 'normal', 12),
                                 ],
                               ),
@@ -180,40 +192,31 @@ class _settingsPageState extends State<settingsPage> {
                                     width: 30,
                                   ),
                                   Container(
-                                    height: 30,
-                                    child: StreamBuilder<String>(
-                                      stream: locations.onValue.map((event) =>
-                                          event.snapshot.value.toString()),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasError) {
-                                          return Text(
-                                              'Error: ${snapshot.error}');
-                                        }
-
-                                        switch (snapshot.connectionState) {
-                                          case ConnectionState.waiting:
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.all(12.0),
-                                              child: Container(
-                                                height: 3,
-                                                child: LinearProgressIndicator(
-                                                  color: Color.fromARGB(
-                                                      255, 137, 137, 137),
-                                                ),
-                                              ),
-                                            );
-                                          default:
+                                    height: 50,
+                                    child: Center(
+                                      child: StreamBuilder<String>(
+                                        stream: locations.onValue.map((event) =>
+                                            event.snapshot.value.toString()),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasError) {
                                             return Text(
-                                              snapshot
-                                                  .data!, // Access the latest credibility value
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            );
-                                        }
-                                      },
+                                                'Error: ${snapshot.error}');
+                                          }
+                                      
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.waiting:
+                                              return Lottie.asset('assets/load_animation.json');
+                                            default:
+                                              return Text(
+                                                snapshot.data!, 
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
                                   StyledText('Locations', 'normal', 12)

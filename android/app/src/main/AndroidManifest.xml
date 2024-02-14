@@ -4,7 +4,7 @@
         <provider android:authorities="com.facebook.orca.provider.PlatformProvider" /> <!-- allows sharing to Messenger app -->
     </queries>
     <application
-        android:label="google_solution_challange"
+        android:label="Basket Finder"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">  
         <activity
