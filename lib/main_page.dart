@@ -64,6 +64,10 @@ class _MapPageState extends State<MapPage> {
   bool? orange = true;
   int requests = 0;
   bool find_nearest_button_pressed = false;
+
+  List<GeoPoint> greenPoints = [];
+  List<GeoPoint> redPoints = [];
+  List<GeoPoint> orangePoints = [];
   List<GeoPoint> userPoints = [];
 
   MapController controller = MapController(
@@ -116,10 +120,6 @@ class _MapPageState extends State<MapPage> {
       });
     });
 
-    List<GeoPoint> greenPoints = [];
-    List<GeoPoint> redPoints = [];
-    List<GeoPoint> orangePoints = [];
-
     void applyLanguage() async
     {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -143,6 +143,9 @@ class _MapPageState extends State<MapPage> {
     }
 
     void applyFilter() {
+      print(green);
+      print(red);
+      print(orange);
       (green == false)
           ? controller.setStaticPosition([], 'green')
           : controller.setStaticPosition(greenPoints, 'green');
@@ -351,6 +354,9 @@ class _MapPageState extends State<MapPage> {
 // ----------------------------------------------------- find nearest function >>
 
     void fetchLocations() async {
+      greenPoints = [];
+      redPoints = [];
+      orangePoints = [];
       controller.setStaticPosition([], 'green');
       controller.setStaticPosition([], 'red');
       controller.setStaticPosition([], 'orange');
