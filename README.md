@@ -16,4 +16,4 @@ Basket Finder is a mobile app that aims at solving the problem of littering by p
 - Google authentication for easy user verification
 
 ## Download
-[Download the APK file](assets/apk/Basket-Finder.apk)
+[Download the APK file](https://www.upload-apk.com/ptH3mAFlNOUnPvT)
