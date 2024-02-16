@@ -62,6 +62,7 @@ class _MapPageState extends State<MapPage> {
   bool? orange = true;
   int requests = 0;
   bool find_nearest_button_pressed = false;
+  int distance_flag = 1;
 
   List<GeoPoint> greenPoints = [];
   List<GeoPoint> redPoints = [];
@@ -308,26 +309,33 @@ class _MapPageState extends State<MapPage> {
           nearestPosition = otherPosition;
         }
       }
+      if(minDistance > 1000)
+      {
+        distance_flag = 0;
+      }
       return nearestPosition;
     }
 
     void findNearestLocation() async {
+      PositionData nearestPosition = PositionData(0, 0);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double currentLatitude = currentPosition.latitude;
+      double currentLongitude = currentPosition.longitude;
       List<PositionData> basketsLocations = [];
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
       locations.forEach((key, value) {
         PositionData targetBasket =
-            PositionData(value['latitude'], value['longitude']);
+          PositionData(value['latitude'], value['longitude']);
         basketsLocations.add(targetBasket);
       });
-      Position currentPosition = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      double currentLatitude = currentPosition.latitude;
-      double currentLongitude = currentPosition.longitude;
-      PositionData nearestBasket =
+      PositionData nearestBasket = 
           minDistanceCalc(currentPosition, basketsLocations);
-
-      RoadInfo roadInfo = await controller.drawRoad(
+        
+        if(distance_flag == 1)
+        {
+        await controller.drawRoad(
         GeoPoint(latitude: currentLatitude, longitude: currentLongitude),
         GeoPoint(
             latitude: nearestBasket.latitude,
@@ -345,6 +353,8 @@ class _MapPageState extends State<MapPage> {
           zoomInto: true,
         ),
       );
+      }
+      // distance_flag = 1;
 //  print("${roadInfo.distance}km");
 //  print("${roadInfo.duration}sec");
 //  print("${roadInfo.instructions}");
@@ -580,7 +590,7 @@ class _MapPageState extends State<MapPage> {
                             secondary: Image.asset('assets/Colored_Markers/red.png', width: 25,),
                             controlAffinity: ListTileControlAffinity.leading,
                           ),
-                          MainButton('apply_filter'.tr(), applyFilter),
+                          MainButton('apply_f'.tr(), applyFilter),
                         ],
                       ),
                     );
@@ -815,12 +825,12 @@ class _MapPageState extends State<MapPage> {
                               height: 120,
                               child: Row(children: [
                                SizedBox(
-                                  width: 16,
+                                  width: 12,
                                 ),
                                  SizedBox(
                                   child: Center(
                                       child: Text(
-                                    'Find\nNearest\nBasket',
+                                    distance_flag == 0?'Sorry\nno near\nBaskets':(find_nearest_button_pressed?'You are\nabout to\nreach':'Find\nNearest\nBasket'),
                                     style: TextStyle(
                                       fontSize: 25,
                                       height: 1,
@@ -832,7 +842,7 @@ class _MapPageState extends State<MapPage> {
                                   width: 100,
                                   height: 100,
                                 ),
-                                Lottie.asset('assets/drawroad.json',
+                                Lottie.asset(distance_flag == 0?'assets/nonearbasket.json':'assets/drawroad.json',
                                     width: 100),
                                 SizedBox(width: 30,),
                                 SizedBox(
@@ -849,6 +859,7 @@ class _MapPageState extends State<MapPage> {
                                         } else {
                                           removeRoads();
                                         }
+                                        distance_flag = 1;
                                         Navigator.pop(context);
                                       },
                                       style: ElevatedButton.styleFrom(
