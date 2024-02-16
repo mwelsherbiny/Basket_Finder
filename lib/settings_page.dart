@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:google_solution_challange/rules_page.dart';
 import 'package:google_solution_challange/sign_in.dart';

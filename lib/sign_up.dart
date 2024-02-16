@@ -4,7 +4,6 @@ import 'package:google_solution_challange/button.dart';
 import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/input.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_solution_challange/social_sign_in.dart';
 
 class SignUp extends StatelessWidget {

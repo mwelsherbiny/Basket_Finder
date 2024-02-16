@@ -5,10 +5,6 @@ import 'package:google_solution_challange/sign_up.dart';
 import 'package:google_solution_challange/social_sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/input.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class SignIn extends StatelessWidget {
   const SignIn({super.key});

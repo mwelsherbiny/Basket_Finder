@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_solution_challange/styled_text.dart';
-import 'package:google_solution_challange/main_page.dart';
 
 class MainButton extends StatelessWidget {
   String text;

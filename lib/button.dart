@@ -1,11 +1,9 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:google_solution_challange/sign_in.dart';
 import 'package:google_solution_challange/styled_text.dart';
 import 'package:google_solution_challange/main_page.dart';
 import 'package:google_solution_challange/input.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 

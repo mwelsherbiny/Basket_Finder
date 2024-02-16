@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_solution_challange/button.dart';
-import 'package:google_solution_challange/sign_in.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class Input extends StatelessWidget {

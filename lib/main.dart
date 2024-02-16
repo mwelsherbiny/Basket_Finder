@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_solution_challange/main_page.dart';
 import 'package:google_solution_challange/onboard.dart';
 import 'package:google_solution_challange/sign_in.dart';
-import 'package:google_solution_challange/sign_up.dart';
 import 'firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 bool signedIn = false;
