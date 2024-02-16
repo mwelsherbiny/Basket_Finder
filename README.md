@@ -1,5 +1,3 @@
-# README
-
 # Basket Finder
 
 ![logo](https://github.com/mwelsherbiny/Basket_Finder/assets/85063506/4207f896-3fc4-43b1-a19b-183d3ee96d41)
@@ -18,4 +16,4 @@ Basket Finder is a mobile app that aims at solving the problem of littering by p
 - Google authentication for easy user verification
 
 ## Download
-[Download the APK file](build/app/outputs/flutter-apk/Basket_Finder.apk)
+[Download the APK file](assets/apk/Basket-Finder.apk)
