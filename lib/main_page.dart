@@ -133,7 +133,8 @@ class _MapPageState extends State<MapPage> {
       }
     }
     void removeLocation() async {
-      controller.removeMarker(currentPoint);
+      userPoints.remove(currentPoint);
+      controller.setStaticPosition(userPoints, 'user');
       await locationRef.child(currentLocationKey).remove();
       setState(() {
         canShowDetails = false;
@@ -240,7 +241,6 @@ class _MapPageState extends State<MapPage> {
 
     void showDetails(GeoPoint point) async {
       // get road name
-      await controller.goToLocation(point);
       final reverseSearchResult = await Nominatim.reverseSearch(
         lat: point.latitude,
         lon: point.longitude,
@@ -248,7 +248,7 @@ class _MapPageState extends State<MapPage> {
       );
       roadName = reverseSearchResult.address?['road'];
       // get distance between user and location
-      GeoPoint userLocation = await controller.myLocation();
+      GeoPoint userLocation = await controller.myLocation(); // removes user's icon
       distance = FlutterMapMath().distanceBetween(userLocation.latitude,
           userLocation.longitude, point.latitude, point.longitude, 'meters');
 
@@ -355,10 +355,11 @@ class _MapPageState extends State<MapPage> {
       greenPoints = [];
       redPoints = [];
       orangePoints = [];
+      userPoints = [];
       controller.setStaticPosition([], 'green');
       controller.setStaticPosition([], 'red');
       controller.setStaticPosition([], 'orange');
-      controller.removeMarkers(userPoints);
+      controller.setStaticPosition([], 'user');
       fetchedLocations = true;
       final locationsSnapshot = await locationRef.get();
       final locations = locationsSnapshot.value as Map<dynamic, dynamic>;
@@ -372,7 +373,6 @@ class _MapPageState extends State<MapPage> {
         switch (updatedMarker) {
           case 'user':
             userPoints.add(point);
-            controller.addMarker(point);
           case 'green':
             greenPoints.add(point);
             break;
@@ -418,6 +418,12 @@ class _MapPageState extends State<MapPage> {
               width: 25,
             ),
           ));
+      await controller.setStaticPosition(userPoints, 'user');
+      await controller.setMarkerOfStaticPoint(
+          id: 'user',
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.person_pin_circle, color: Colors.orange,),
+          ));
     }
 
     void addLocation() async {
@@ -454,7 +460,6 @@ class _MapPageState extends State<MapPage> {
         }
       }
       bool locationAlreadyExists = false;
-      await controller.currentLocation();
       GeoPoint point = await controller.myLocation();
       try {
         final locationKeysSnapshot = await locationRef.get();
@@ -484,7 +489,8 @@ class _MapPageState extends State<MapPage> {
           'exists': false,
         };
         locationRef.push().set(location);
-        controller.addMarker(point);
+        userPoints.add(GeoPoint(latitude: point.latitude + 0.00001, longitude: point.longitude + 0.00001));
+        controller.setStaticPosition(userPoints, 'user');
         await userRef
             .child(currentUser!.uid)
             .update({'locations': locations - 1});
@@ -877,7 +883,6 @@ class _MapPageState extends State<MapPage> {
                     } else if (index == 0) {
                       setState(() {
                         canAddLocation = true;
-                        controller.currentLocation();
                       });
                     }
                   },
