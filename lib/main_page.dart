@@ -248,7 +248,8 @@ class _MapPageState extends State<MapPage> {
       );
       roadName = reverseSearchResult.address?['road'];
       // get distance between user and location
-      GeoPoint userLocation = await controller.myLocation(); // removes user's icon
+      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      GeoPoint userLocation = GeoPoint(latitude: currentPosition.latitude, longitude: currentPosition.longitude); // removes user's icon
       distance = FlutterMapMath().distanceBetween(userLocation.latitude,
           userLocation.longitude, point.latitude, point.longitude, 'meters');
 
