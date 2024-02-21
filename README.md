@@ -15,5 +15,14 @@ Basket Finder is a mobile app that aims at solving the problem of littering by p
 - A filter so users can select what type of locations are shown on the map(likely to find, unconfirmed, unlikely to find)
 - Google authentication for easy user verification
 
+## Installation 
+1. Clone the Femunity repository from GitHub: https://github.com/mwelsherbiny/Basket_Finder
+
+2. Open the project folder in VS Code.
+
+3. In VS Code, open the command palette (View > Command Palette) and type "Flutter: Run Flutter Doctor". This will check your system to make sure everything is set up correctly.
+
+4. In VS Code, open the main.dart file and click the "Run" button. This will launch the app in the emulator or on your physical device.
+
 ## Download
 [Download the APK file](https://www.upload-apk.com/ptH3mAFlNOUnPvT)
