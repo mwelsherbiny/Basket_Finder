@@ -25,4 +25,4 @@ Basket Finder is a mobile app that aims at solving the problem of littering by p
 4. In VS Code, open the main.dart file and click the "Run" button. This will launch the app in the emulator or on your physical device.
 
 ## Download
-[Download the APK file](https://www.upload-apk.com/ptH3mAFlNOUnPvT)
+[Download the APK file](https://www.upload-apk.com/sBr7CwAIFA2lFdc)
