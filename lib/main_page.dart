@@ -353,12 +353,8 @@ class _MapPageState extends State<MapPage> {
           zoomInto: true,
         ),
       );
-      }
-      // distance_flag = 1;
-//  print("${roadInfo.distance}km");
-//  print("${roadInfo.duration}sec");
-//  print("${roadInfo.instructions}");
     }
+  }
 // ----------------------------------------------------- find nearest function >>
 
     void fetchLocations() async {
